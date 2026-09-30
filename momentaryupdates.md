@@ -91,3 +91,13 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
    numbers, whose name, field names, papers). **Status:** written in the chat, 30.9.2026. The family
    page and its tree are still paused (see mantra_arkod/momentaryupdates.md), so the message does not
    promise them.
+
+## 30.9.2026, version 2: full screen
+
+> Since you cannot see dollar balance, please stop checking it. And on the website, please add for map
+> the full screen so it can be spread to the full screen with full screen icon, which will be only
+> thing visible in the full screen. Go out of the full screen.
+
+1. No more budget lines in the reports. **Status:** done.
+2. A full-screen key on the map. In full screen, only the map and that one key are visible (no fields,
+   no key row, no top line); the key takes it out again. **Status:** in progress.
