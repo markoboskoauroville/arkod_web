@@ -255,6 +255,7 @@ try {
   await page.waitForSelector('#settings');
   const firstGroups = await page.$$eval('#settings .group h3', (xs) => xs.slice(0, 3).map((x) => x.textContent));
   check(firstGroups[0] === 'Kept on this phone' && firstGroups[1] === 'Services', `the settings open with what is kept, then the services: ${firstGroups.join(' · ')}`);
+  await page.waitForFunction(() => /MB|kB|unknown/.test(document.querySelector('#kept-size')?.textContent ?? ''), null, { timeout: 10000 }).catch(() => {});
   check(/MB|kB/.test(await page.textContent('#kept-size')), `the size is on top: "${(await page.textContent('#kept-size')).trim()}"`);
   await page.click('#log-open');
   const logLines = await page.$$eval('#service-log .logrow', (xs) => xs.map((x) => x.textContent));
