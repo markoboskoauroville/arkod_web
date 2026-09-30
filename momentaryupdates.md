@@ -122,3 +122,15 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
 
 2. Ivana and Šime Boško, his grandparents, have died: the message says so ("pokojna baka Ivana",
    "pokojni djed Šime") and counts the parcels still on their names. **Status:** done in the chat.
+
+> Please write complete message to dad. There is no link to that website. There is no username
+> password. Unite all the messages in one. Start with I'm building, this is the username password,
+> this is address, and then details under. First most important thing that he goes there to the
+> website and then summarize everything under that data.And please, uh, write the messages in code
+> box. Everything is in manifest. Why you don't read manifest? Every project should read manifest
+> before starting.
+
+3. One message to his father, in a code box, in Marko's voice (MANTRA_MANIFEST
+   modules/writing-styles.md §0a: no dashes, no bullets, no bold): the site first (address, user,
+   password, from markoboskopossesions' own notes), then the findings, then what we need from him.
+   **Status:** done in the chat. The manifest was read (START_HERE, README, writing-styles).
