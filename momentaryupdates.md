@@ -170,3 +170,12 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
    the install page open them. **Status:** done in version 4: 14 sections each, the same text as the
    Android app v18's; each page links to the other language and back to the map. Every new feature goes
    into both pages.
+
+## 30.9.2026, version 5: "Check now" on every service that is down
+
+> please, next to the offline services inside the settings, and you said it's offline, just add the button
+> check now so it can be checked now and maybe make online and make it work
+
+1. As the Android app v19: a "Check now" button on each red or grey service in Settings → Services,
+   three tries, each said on the row; when a service is back, what waited for it is done at once.
+   **Status:** in progress.
