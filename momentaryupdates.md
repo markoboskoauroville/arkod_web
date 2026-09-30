@@ -80,3 +80,14 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
    Not yet: the real state from the deployed site (this sandbox cannot reach it), and a real iPhone. See TESTING.md.
    Marko adds the Cloudflare secrets: arkod_web → Settings → Secrets and variables → Actions → CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
    Then run Actions → deploy → Run workflow.
+
+## 30.9.2026, the message to his father
+
+> then expand the message to my father asking him to also give all the parcel numbers which belongs to
+> our family which are missing here, and everything is other, so we can add everything on this map
+
+2. The message to his father (Marinko), in Croatian: what the map is for, and a request for every
+   family parcel number still missing, in any k.o., with everything else he knows (sheet and folio
+   numbers, whose name, field names, papers). **Status:** written in the chat, 30.9.2026. The family
+   page and its tree are still paused (see mantra_arkod/momentaryupdates.md), so the message does not
+   promise them.
