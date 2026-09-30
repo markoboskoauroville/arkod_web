@@ -134,3 +134,23 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
    modules/writing-styles.md §0a: no dashes, no bullets, no bold): the site first (address, user,
    password, from markoboskopossesions' own notes), then the findings, then what we need from him.
    **Status:** done in the chat. The manifest was read (START_HERE, README, writing-styles).
+
+## 30.9.2026, version 3: fly-through scanning, and level with the Android app (v11 to v16)
+
+> I want to add one more feature, and then you need to update both apps, APK and web app, and that is
+> fly-through scanning. So in fly-through scanning, user can write anything, and if some, some of this
+> text is mentioned in the, uh, parcels I see in my view, they will auto-select. So for example, in
+> Kuklica, we can test. You can write Yasha, and then fly through Kuklitsa. And then when Yasha is in
+> some of those parcels, they will just auto-select. So there should be also verbose indicator. I, I—
+> there will be small airplane, and then I click fly-through scanning, and then, uh, it will just give
+> me status scanning, scanning, scanning. Found selecting. So the whole app should be more verbose and
+> we always need to know what's going on there. So we are kind of in trace with that when we are
+> testing all these services, R-Code and other services you are using. I'm not familiar still what you
+> are using everything, but it works. But sometimes looks like this morning when we tested until 9, it
+> was not working. And late afternoon after 4:30, this service, one service was out of service. So we
+> need to understand what's going on. And how to go around these limitations.
+
+1. Fly-through scanning, the airplane key, as in the Android app v16. **Status:** in progress.
+2. Level with the Android app: the parcel field wherever the map is (v11), outlines kept one by one
+   (v11), the sniffer, its key and keywords, the size and the kept parcels in the settings (v12, v13),
+   a light for every service with its log (v14, v16). **Status:** in progress.
