@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Install ARKOD Layer</title>
+<meta name="theme-color" content="#0B0D10">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<style>
+  :root { --ground:#0B0D10; --card:#16191D; --raised:#2C323A; --line:#262B31; --sand:#F2DDB4; --text:#E8E4DC; --dim:#9AA0A6; --amber:#E8A64B; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 560px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) 16px 48px; }
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  header img { width: 56px; height: 56px; border-radius: 13px; }
+  h1 { font-size: 22px; margin: 0; color: var(--sand); }
+  h2 { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); margin: 0 0 10px; }
+  a { color: var(--sand); }
+  .way { background: var(--card); border-radius: 16px; padding: 16px; margin: 16px 0; }
+  .way.first { outline: 1px solid #3a4048; }
+  .tag { display: inline-block; font-size: 12px; background: var(--raised); color: #fff; border-radius: 8px; padding: 2px 8px; margin-left: 6px; vertical-align: 2px; text-transform: none; letter-spacing: 0; }
+  ol { padding-left: 22px; margin: 0; }
+  li { margin: 0 0 14px; }
+  figure { margin: 8px 0 0; }
+  figure svg { width: 100%; max-width: 320px; height: auto; display: block; border-radius: 12px; }
+  .act { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 12px; background: var(--amber); color: #0B0D10; font-weight: 600; text-decoration: none; margin: 12px 0 6px; }
+  .quiet { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 12px; border: 1px solid #3a4048; color: var(--sand); text-decoration: none; margin: 8px 0; background: none; font: inherit; width: 100%; cursor: pointer; }
+  .dim { color: var(--dim); font-size: 14px; }
+  #installBtn[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="../icons/icon-192.png" alt=""><div><h1>ARKOD Layer</h1><div class="dim">Katastarske čestice Hrvatske, on your home screen</div></div></header>
+  <p class="dim" id="said">Installed, it opens full screen like any app, keeps the map and sheets you have seen for no signal, and needs no store.</p>
+
+  <div id="ways">
+  <section class="way" id="iphone">
+    <h2>iPhone and iPad <span class="tag" id="iphone-tag" hidden>your phone</span></h2>
+    <ol>
+      <li>Open <b>arkod-layer.pages.dev</b> in <b>Safari</b> (in Chrome on iPhone the steps are the same, from its own Share button).
+      </li>
+      <li>Tap the <b>Share</b> button: the square with the arrow up, at the bottom of the screen (at the top on an iPad).
+        <figure><svg viewBox="0 0 320 120" role="img" aria-label="Safari's bottom bar with the Share button marked">
+          <rect width="320" height="120" fill="#1c1f24"/><rect x="0" y="70" width="320" height="50" fill="#2a2e35"/>
+          <rect x="14" y="14" width="292" height="36" rx="10" fill="#3a3f47"/><text x="160" y="37" fill="#cfd3d8" font-size="14" text-anchor="middle" font-family="system-ui">arkod-layer.pages.dev</text>
+          <g stroke="#9aa0a6" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M30 95l-7-7 7-7"/><path d="M78 81l7 7-7 7"/><path d="M246 84h14v18h-14z"/><path d="M280 82h18v20h-18z M284 78h18v20"/></g>
+          <circle cx="160" cy="93" r="21" fill="none" stroke="#E8A64B" stroke-width="3"/>
+          <g stroke="#4ea1ff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M152 89v12h16V89"/><path d="M160 97V80 M154 85l6-6 6 6"/></g>
+        </svg></figure>
+      </li>
+      <li>Scroll the list down and tap <b>Add to Home Screen</b>.
+        <figure><svg viewBox="0 0 320 150" role="img" aria-label="The share list with Add to Home Screen marked">
+          <rect width="320" height="150" rx="14" fill="#2a2e35"/>
+          <g font-family="system-ui" font-size="15" fill="#e8e4dc">
+            <text x="20" y="32">Copy</text><text x="20" y="80">Add to Home Screen</text><text x="20" y="128">Add Bookmark</text></g>
+          <path d="M0 50h320 M0 100h320" stroke="#3a3f47"/>
+          <rect x="4" y="54" width="312" height="42" rx="10" fill="none" stroke="#E8A64B" stroke-width="3"/>
+          <g stroke="#cfd3d8" stroke-width="2" fill="none" stroke-linecap="round"><rect x="277" y="64" width="22" height="22" rx="5"/><path d="M288 69v12 M282 75h12"/></g>
+        </svg></figure>
+      </li>
+      <li>Tap <b>Add</b> at the top right. ARKOD Layer is now on your home screen; open it from there.
+        <figure><svg viewBox="0 0 320 130" role="img" aria-label="The Add to Home Screen sheet with Add marked">
+          <rect width="320" height="130" rx="14" fill="#2a2e35"/>
+          <g font-family="system-ui" font-size="15"><text x="18" y="30" fill="#4ea1ff">Cancel</text><text x="160" y="30" fill="#e8e4dc" text-anchor="middle" font-weight="600">Add to Home Screen</text><text x="300" y="30" fill="#4ea1ff" text-anchor="end" font-weight="600">Add</text></g>
+          <circle cx="283" cy="25" r="22" fill="none" stroke="#E8A64B" stroke-width="3"/>
+          <rect x="18" y="56" width="56" height="56" rx="13" fill="#0B0D10"/>
+          <g transform="translate(28 66) scale(1.5)" fill="none" stroke="#E8A64B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z M4 11h8 M12 4v16 M12 15h8"/></g>
+          <text x="90" y="80" fill="#e8e4dc" font-family="system-ui" font-size="16">ARKOD Layer</text>
+          <text x="90" y="100" fill="#9aa0a6" font-family="system-ui" font-size="12">arkod-layer.pages.dev</text>
+        </svg></figure>
+      </li>
+    </ol>
+    <p class="dim">Data an installed web app keeps on an iPhone (Moje čestice, caches, the Google key) stays in that app, apart from Safari. Export Moje čestice as a file before you delete the app.</p>
+  </section>
+
+  <section class="way" id="android">
+    <h2>Android <span class="tag" id="android-tag" hidden>your phone</span></h2>
+    <p><b>The Android app</b> is the fullest ARKOD: the same map, plus the phone's own offline map of Croatia.</p>
+    <a class="act" id="apk" href="https://github.com/markoboskoauroville/mantra_arkod/releases/latest">Download the Android app (APK)</a>
+    <p class="dim">Open the downloaded file; Android asks once to allow installs from your browser.</p>
+    <p><b>Or this web app:</b> in <b>Chrome</b>, open the ⋮ menu → <b>Install app</b> (on some phones: <b>Add to Home screen</b> → <b>Install</b>).</p>
+    <button class="quiet" id="installBtn" type="button" hidden>Install ARKOD Layer now</button>
+  </section>
+
+  <section class="way" id="desktop">
+    <h2>Computer</h2>
+    <p>Chrome or Edge: the install icon at the right end of the address bar, or ⋮ → <b>Cast, save and share</b> → <b>Install page as app</b>. Safari on a Mac: File → <b>Add to Dock</b>.</p>
+  </section>
+  </div>
+
+  <a class="quiet" href="../">Open ARKOD Layer</a>
+</main>
+<script>
+  // Show the person's own way first.
+  const ua = navigator.userAgent;
+  const iOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const ways = document.getElementById('ways');
+  const mine = iOS ? 'iphone' : android ? 'android' : 'desktop';
+  ways.prepend(document.getElementById(mine));
+  document.getElementById(mine).classList.add('first');
+  const tag = document.getElementById(mine + '-tag'); if (tag) tag.hidden = false;
+  document.body.dataset.platform = mine;
+  if (standalone) document.getElementById('said').textContent = 'ARKOD Layer is already installed and running as an app.';
+  let deferred = null;
+  addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferred = e; document.getElementById('installBtn').hidden = false; });
+  document.getElementById('installBtn').addEventListener('click', async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; document.getElementById('installBtn').hidden = true; });
+</script>
+</body>
+</html>

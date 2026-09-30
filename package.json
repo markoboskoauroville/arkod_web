@@ -1,0 +1,15 @@
+{
+  "name": "arkod-web",
+  "private": true,
+  "type": "module",
+  "description": "ARKOD Layer as a web app (PWA): Croatia's cadastral parcels, their possession and owner sheets, Moje čestice.",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "verify": "node scripts/verify.mjs",
+    "e2e": "node tests/e2e.mjs"
+  },
+  "devDependencies": {
+    "leaflet": "^1.9.4",
+    "playwright": "^1.56.1"
+  }
+}

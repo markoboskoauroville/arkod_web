@@ -73,4 +73,10 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
 > 3. what was not tested and why;
 > 4. every FEATURES.md row that is still not "yes" on the web, with the reason.
 
-1. The web app, every FEATURES.md row. **Status:** in progress.
+1. The web app, every FEATURES.md row. **Status:** done 30.9.2026, version 1. Every FEATURES.md row is "yes" on the web except 25
+   (tracks: n/a, a browser cannot record in the background) and 26 (compass: n/a on both, removed at his word).
+   Row 19's "open with" is n/a on the iPhone; import there goes through the in-app picker.
+   Tested: 85 unit tests, the verify script and 36 browser checks at 390 x 844 against a fake state.
+   Not yet: the real state from the deployed site (this sandbox cannot reach it), and a real iPhone. See TESTING.md.
+   Marko adds the Cloudflare secrets: arkod_web → Settings → Secrets and variables → Actions → CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+   Then run Actions → deploy → Run workflow.
