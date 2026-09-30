@@ -105,3 +105,15 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
    an iPhone has no such way for a page, but the home-screen app has no bars anyway. The small map
    credit (© OpenStreetMap) stays, faint: OpenStreetMap's terms require it. FEATURES.md row 27; opened
    for Android.
+
+## 30.9.2026, the message to his father, with the findings
+
+> Please update the message with summary of all findings. How many square meters is there? And you put
+> like top owners. Who is— who has the most land out of this? Number 1, how many squares? Number 2. So
+> do some summary of all this in the message. All these parcels, their sizes, and who owns Give some
+> short summary and say you can see everything breakdown in the website.
+
+1. The message with a summary: total m², the owners ranked by land (m² by their share), each parcel's
+   size and owners, and "the whole breakdown is on the website". **Status:** written with blanks. The
+   findings are on Marko's phone (the caches and Moje čestice he made there); this session has never
+   had them and cannot reach the state. Needs either the data from him or a summary screen in the app.
