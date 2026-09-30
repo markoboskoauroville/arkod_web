@@ -160,3 +160,11 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
    core/sniff.js, core/services.js, scan.js; 15 cases ported from the Android CoreTest; 13 new browser
    checks, 52 in all). Found on the way and fixed in both apps: a service's first answer after the app
    opens was logged as "back online"; now only going down and coming back are.
+
+## 30.9.2026, version 4: help, in English and in Croatian
+
+> please add help section to both apps, web and apk, explaining playground, how it works, what are the
+> mechanisms, and how to use it in both languages, croatian and english, so there should be 2 help files
+
+1. Two help pages, help/en.html and help/hr.html, the same text as the Android app's; Settings → Help and
+   the install page open them. **Status:** in progress.
