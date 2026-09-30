@@ -29,10 +29,10 @@ for (const f of local) if (!await exists(join(PUB, f))) missing.push(f);
 check(!missing.length, `index.html: ${local.length} local files referenced (${local.join(', ')})${missing.length ? '; missing ' + missing.join(', ') : ''}`);
 check(/cdnjs\.cloudflare\.com\/ajax\/libs\/leaflet\/1\.9\.4\/leaflet\.js/.test(index) && /leaflet\/1\.9\.4\/leaflet\.css/.test(index), 'index.html loads Leaflet 1.9.4 (js and css) from cdnjs');
 check(/name="viewport"[^>]*viewport-fit=cover/.test(index) && /apple-mobile-web-app-capable/.test(index), 'index.html has the phone viewport and the iPhone home-screen metas');
-for (const id of ['map', 'k-full', 'top', 'fields', 'note', 'status', 'keys', 'faces', 'import-file', 'key-file']) {
+for (const id of ['map', 'k-full', 'top', 'lights', 'roundkeys', 'flyline', 'sniffline', 'fields', 'note', 'status', 'keys', 'faces', 'import-file', 'key-file']) {
   if (!index.includes(`id="${id}"`)) check(false, `index.html has #${id}`);
 }
-check(true, 'index.html has #map #k-full #top #fields #note #status #keys #faces #import-file #key-file');
+check(true, 'index.html has #map #k-full #top #lights #roundkeys #flyline #sniffline #fields #note #status #keys #faces #import-file #key-file');
 
 // 2. the manifest and the icons
 const manifest = JSON.parse(await read(join(PUB, 'manifest.webmanifest')));

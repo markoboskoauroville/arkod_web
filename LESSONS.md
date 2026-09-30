@@ -12,3 +12,9 @@
 - **A fake service built on one grid** (60 m Mercator squares) keeps pictures, taps, outlines and the WFS consistent with each other.
   That lets the browser test walk the real flow: tap, trace the outline, second tap, sheet.
 - **OffscreenCanvas** is missing from older Safari. A plain `document.createElement('canvas')` works everywhere.
+- **A service's first answer is not news.** The log first recorded every grey-to-green as "back online", so every page load
+  wrote a line per service and overwrote what fly-through had just said. Log only going down, and coming back after being down.
+- **A lit key needs a solid base.** A see-through amber circle vanished over OpenStreetMap's light ground; a dark base under the amber keeps it readable on every map.
+- **Keep the state's answers yourself, not only in the service worker.** The service worker is blocked in tests and absent in some
+  browsers; answers kept in IndexedDB (`ans:` + URL) give the kept-parcel list, offline sheets and the sniffer's criteria everywhere.
+

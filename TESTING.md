@@ -5,7 +5,7 @@
 |---|---|
 | `npm test` | 85 unit tests: the Android CoreTest cases ported, plus the canvas restyle, the cache status line, a file made on Android opening here, and the proxies |
 | `npm run verify` | files referenced exist, icons and sizes, every import/export, the service worker list, the proxies, the install page, no keys, the workflow, the docs |
-| `npm run e2e` | Chromium at 390 x 844 against `tests/fake-state.mjs`: 39 checks, screenshots in `tests/screens/` |
+| `npm run e2e` | Chromium at 390 x 844 against `tests/fake-state.mjs`: 52 checks, screenshots in `tests/screens/` |
 
 The browser test walks the app step by step:
 1. Kukljica (44.036, 15.253) at z17 with the layer drawn. Full screen shows only the map and its key, and the same key comes back. A tap selects 2449/2 and traces its outline.
@@ -16,7 +16,8 @@ The browser test walks the app step by step:
 6. The layer key hides the layer. GOO shows the key help; a pasted key is tested at once.
 7. The install page, as seen by an iPhone and by an Android phone.
 8. A desktop at 1280 px.
-9. The service worker keeps the app and the ARKOD layer around the map, and the app opens with no signal.
+9. Web v3: the service lights (green, then the WFS failing with ORA-01000: red, said on the map, in the log, back green); the settings open with what is kept and the services; every kept parcel in three words; fly-through "uzorak" finds 2449/2; from Zagreb, "2449/2" and "2451 kukljica" open in Kukljica; the cache key.
+10. The service worker keeps the app and the ARKOD layer around the map, and the app opens with no signal.
 
 ## By hand, on Marko's phones (the real state; the tests use a fake one)
 
@@ -34,8 +35,9 @@ The browser test walks the app step by step:
     Search a name in the parcel field: the cache answers.
 11. Settings → Moje čestice → export a group (share icon) → Save to Files. Then Import a file, and pick it:
     the group comes back. (A web app on the iPhone cannot be chosen from "Open with", so import is done inside the app.)
-12. The full-screen key (top right): only the map is left, with that key; tap it again to come back.
-13. GOO: follow the key help, paste your key (or pick the file it is in). The road map appears.
+12. The round keys over the key row: the airplane (fly-through: write "jaša", fly over Kukljica, watch the line and the magenta outlines) and the cache key (on/off). The lights under the coordinates; a tap opens Settings: what is kept, the Services with their log.
+13. The full-screen key (top right): only the map is left, with that key; tap it again to come back.
+14. GOO: follow the key help, paste your key (or pick the file it is in). The road map appears.
 
 ### Android, Chrome
 1. Open https://arkod-layer.pages.dev/install/. Android comes first, with the APK link and "Install app".

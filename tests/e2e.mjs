@@ -38,6 +38,8 @@ function check(ok, what) {
   if (!ok) failures += 1;
 }
 const asked = { wms: 0, info: 0, wfs: 0, oss: 0, google: 0 };
+// The state failing as it did on 30.9.2026 at 16:20 (web v3: the lights and the log).
+const fail = { wfs: false };
 
 async function wire(context) {
   await context.route('https://cdnjs.cloudflare.com/**', async (route) => {
@@ -54,7 +56,11 @@ async function wire(context) {
       asked.wms += 1;
       return route.fulfill({ body: Fake.wmsPicture(q.get('BBOX').split(',').map(Number), Number(q.get('WIDTH')), Number(q.get('HEIGHT'))), contentType: 'image/png' });
     }
-    if (u.pathname === '/api/wfs') { asked.wfs += 1; return route.fulfill({ body: Fake.wfs(q), contentType: 'application/json' }); }
+    if (u.pathname === '/api/wfs') {
+      asked.wfs += 1;
+      if (fail.wfs) return route.fulfill({ status: 500, contentType: 'text/xml', body: '<ows:ExceptionReport><ows:Exception><ows:ExceptionText>java.sql.SQLException: ORA-01000: maximum open cursors exceeded\n</ows:ExceptionText></ows:Exception></ows:ExceptionReport>' });
+      return route.fulfill({ body: Fake.wfs(q), contentType: 'application/json' });
+    }
     if (u.pathname.startsWith('/api/oss/')) {
       asked.oss += 1;
       const body = Fake.oss(u.pathname.slice('/api/oss/'.length), q, route.request().postData());
@@ -229,6 +235,73 @@ try {
   await page.waitForFunction(() => document.querySelector('#note')?.textContent.includes('Google'), null, { timeout: 5000 });
   check(asked.google > 0, `a pasted key is tested at once; Google's own words are shown: "${(await page.textContent('#note')).trim()}"`);
   await page.click('#k-osm');
+
+  // 7b. web v3, level with Android v11 to v16
+  // the service lights: the ARKOD layer and the cadastre have answered, so their lights are green
+  await page.waitForFunction(() => document.querySelector('#lights [data-service="WMS"]')?.dataset.light === 'GREEN', null, { timeout: 10000 });
+  const lights = await page.$$eval('#lights .light', (xs) => xs.map((x) => `${x.textContent}:${x.dataset.light}`));
+  check(lights.some((l) => l === 'WMS:GREEN') && lights.some((l) => l === 'KAT:GREEN'), `a light for every service, under the coordinates: ${lights.join(' ')}`);
+  // the WFS fails with ORA-01000: its light goes red, the map says so, the log keeps it
+  fail.wfs = true;
+  await page.evaluate(() => import('./js/net.js').then((n) => n.check('WFS')));
+  await page.waitForFunction(() => document.querySelector('#lights [data-service="WFS"]')?.dataset.light === 'RED', null, { timeout: 10000 });
+  const said = (await page.textContent('#note')).trim();
+  check(said.includes('WFS offline') && said.includes('ORA-01000'), `the WFS failing is said on the map at once: "${said}"`);
+  await shot('17-service-down');
+  fail.wfs = false;
+  await page.evaluate(() => import('./js/net.js').then((n) => n.check('WFS')));
+  await page.waitForFunction(() => document.querySelector('#lights [data-service="WFS"]')?.dataset.light === 'GREEN', null, { timeout: 10000 });
+  await page.click('#lights');
+  await page.waitForSelector('#settings');
+  const firstGroups = await page.$$eval('#settings .group h3', (xs) => xs.slice(0, 3).map((x) => x.textContent));
+  check(firstGroups[0] === 'Kept on this phone' && firstGroups[1] === 'Services', `the settings open with what is kept, then the services: ${firstGroups.join(' · ')}`);
+  check(/MB|kB/.test(await page.textContent('#kept-size')), `the size is on top: "${(await page.textContent('#kept-size')).trim()}"`);
+  await page.click('#log-open');
+  const logLines = await page.$$eval('#service-log .logrow', (xs) => xs.map((x) => x.textContent));
+  check(logLines.some((l) => l.includes('WFS offline · ORA-01000')) && logLines.some((l) => l.includes('WFS back online')), `the service log keeps it: ${logLines.slice(0, 2).join(' | ')}`);
+  const wfsRow = await page.textContent('#settings .service[data-service="WFS"]');
+  check(wfsRow.includes('outline'), 'each service says what it does');
+  await page.click('#kept-open');
+  await page.waitForSelector('#kept-list .keptrow', { timeout: 10000 });
+  const keptRows = await page.$$eval('#kept-list .keptrow', (xs) => xs.map((x) => x.textContent));
+  check(keptRows.some((r) => r.startsWith('2449/2') && r.includes('Primjer') && r.includes('KUKLJICA')), `every kept parcel in three words: ${keptRows.slice(0, 3).join(' | ')}`);
+  await shot('18-settings-kept-services');
+  await page.click('#settings-close');
+  // fly-through: "uzorak" is on 2449/2's sheet only
+  await page.goto(`${SITE}/?lat=${Fake.KUKLJICA[0]}&lon=${Fake.KUKLJICA[1]}&z=17`);
+  await page.waitForSelector('body[data-ready="1"]');
+  await page.click('#k-fly');
+  await page.waitForSelector('.veil .field');
+  await page.fill('.veil .field', 'uzorak');
+  await page.click('.veil .act:not(.quiet)');
+  await page.waitForFunction(() => document.querySelector('#flyline')?.textContent.includes('found'), null, { timeout: 30000 });
+  await page.waitForFunction(() => document.querySelector('#flyline')?.textContent.includes('this view scanned'), null, { timeout: 30000 }).catch(() => {});
+  const fly = (await page.textContent('#flyline')).trim();
+  const foundPaths = await page.locator('.leaflet-mine-pane path.found').count();
+  check(fly.includes('found 1') && foundPaths >= 1, `✈ "uzorak" over Kukljica finds 2449/2 and outlines it: "${fly}" (${foundPaths} found)`);
+  check((await page.textContent('#note')).includes('2449/2'), `and says so: "${(await page.textContent('#note')).trim()}"`);
+  await shot('19-fly-through');
+  await page.click('#k-fly');
+  check(await page.locator('#flyline').isHidden(), 'a tap on the airplane lands');
+  // the parcel field wherever the map is: in Zagreb, 2449/2 is found in Kukljica and opens
+  await page.goto(`${SITE}/?lat=45.81&lon=15.97&z=17`);
+  await page.waitForSelector('body[data-ready="1"]');
+  await page.fill('#parcel-field', '2449/2');
+  await page.press('#parcel-field', 'Enter');
+  await page.waitForSelector('#sheet', { timeout: 15000 });
+  check((await page.textContent('#sheet .num')).includes('2449/2'), 'in Zagreb, "2449/2" + Search finds it in Kukljica and opens its sheet');
+  await page.click('#sheet-close');
+  await page.fill('#parcel-field', '2451 kukljica');
+  await page.press('#parcel-field', 'Enter');
+  await page.waitForSelector('#sheet', { timeout: 15000 });
+  check((await page.textContent('#sheet .num')).includes('2451'), '"2451 kukljica" names the k.o. and opens it');
+  await shot('20-found-from-zagreb');
+  await page.click('#sheet-close');
+  // the cache key
+  const cacheWasOn = await page.locator('#k-cache.lit').count();
+  await page.click('#k-cache');
+  check(cacheWasOn === 1 && await page.locator('#k-cache.lit').count() === 0, 'the cache key turns caching off (and on again)');
+  await page.click('#k-cache');
 
   // 8. the install page shows each phone its own way first
   for (const [ua, first] of [['Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1', 'iphone'],

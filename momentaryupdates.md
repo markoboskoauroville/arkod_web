@@ -150,7 +150,13 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
 > was not working. And late afternoon after 4:30, this service, one service was out of service. So we
 > need to understand what's going on. And how to go around these limitations.
 
-1. Fly-through scanning, the airplane key, as in the Android app v16. **Status:** in progress.
+1. Fly-through scanning, the airplane key, as in the Android app v16. **Status:** done in version 3:
+   the airplane is a round key over the right end of the key row; the words are asked, and wherever the
+   map rests at z16 or closer a 5 x 5 grid is read; a parcel whose sheet mentions them is outlined
+   magenta and selected; every step on the line. Tested: "uzorak" over Kukljica finds 2449/2.
 2. Level with the Android app: the parcel field wherever the map is (v11), outlines kept one by one
    (v11), the sniffer, its key and keywords, the size and the kept parcels in the settings (v12, v13),
-   a light for every service with its log (v14, v16). **Status:** in progress.
+   a light for every service with its log (v14, v16). **Status:** done in version 3 (core/query.js,
+   core/sniff.js, core/services.js, scan.js; 15 cases ported from the Android CoreTest; 13 new browser
+   checks, 52 in all). Found on the way and fixed in both apps: a service's first answer after the app
+   opens was logged as "back online"; now only going down and coming back are.

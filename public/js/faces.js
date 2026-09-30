@@ -6,8 +6,13 @@ import {
   S, say, showLayer, applyVisibility, openSheet, goToParcel, select, showPin, whereAmI, remember, saveMarks, fillShapes,
   giveFile, drawMine, topLine, showFace, closeFace, loadState, bestKey, saveKeys, buildMap,
   fold, distanceLabel, results, searchBox, nameBox, face, group, opens, pick, toggle, choice, action, iconAction, h, db, net, P, Style, Cache, MarkFile, OwnerBook,
+  openKept, showFound, addToImenik,
 } from './app.js';
 import { icon } from './icons.js';
+import * as Q from './core/query.js';
+import * as Sn from './core/sniff.js';
+import * as Services from './core/services.js';
+import { Sniffer, Flyer, lightCheck, checkAll } from './scan.js';
 
 const $ = (sel) => document.querySelector(sel);
 const RELEASES = 'https://github.com/markoboskoauroville/arkod_web/releases/latest';
@@ -22,6 +27,7 @@ export async function boot() {
   buildFields();
   wireImport();
   wireFullScreen();
+  wireBackground();
   if (S.marks.some((m) => !m.rings.length)) fillShapes();
   if ('serviceWorker' in navigator && !new URLSearchParams(location.search).has('nosw')) {
     navigator.serviceWorker.register('sw.js').catch(() => { /* the app works without it, only not offline */ });
@@ -30,6 +36,92 @@ export async function boot() {
   if (open === 'mine') mojeCestice();
   if (open === 'settings') settings();
   document.body.dataset.ready = '1';
+}
+
+// --- what runs in the background, said at every step (web v3, Android v12 to v16) ---------------------
+
+const hhmm = (t) => new Date(t).toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
+
+function statusLine(id, text) {
+  const el = $('#' + id);
+  if (!el) return;
+  el.hidden = !text;
+  el.textContent = text ?? '';
+}
+
+/** The lights under the coordinates: a short name each, green, red or grey; a tap opens the settings. */
+function drawLights() {
+  const el = $('#lights');
+  if (!el) return;
+  el.replaceChildren(...Services.SERVICES.filter((s) => s.id !== 'GOOGLE' || S.keys.length).map((s) => {
+    const l = Services.light(Services.health.get(s.id));
+    return h('span.light', { dataset: { service: s.id, light: l }, title: `${s.title}: ${Services.said(Services.health.get(s.id), Date.now(), hhmm)}` },
+      h('i.led.' + l.toLowerCase()), s.short);
+  }));
+}
+
+function roundKey(id, iconName, label, on, onclick, onlong = null) {
+  const b = key(id, iconName, label, onclick, { cls: '.round' + (on ? '.lit' : ''), onlong });
+  return b;
+}
+
+function drawRoundKeys() {
+  const row = $('#roundkeys');
+  if (!row) return;
+  row.replaceChildren(
+    // FLY-THROUGH SCANNING (v3, Android v16): the small airplane.
+    roundKey('k-fly', 'plane', Flyer.state.on ? 'Land (stop fly-through)' : 'Fly-through scanning', Flyer.state.on, () => {
+      if (Flyer.state.on) { Flyer.stop(); say(`✈ landed · found ${S.found.length}`); drawRoundKeys(); } else askFly();
+    }, askFly),
+    // THE CACHE KEY (v3, Android v12): lit while the app caches in the background.
+    roundKey('k-cache', 'sniff', S.cacheOn ? 'Cache on (tap: off)' : 'Cache off (tap: on)', S.cacheOn, () => setCache(!S.cacheOn), settings),
+  );
+}
+
+function setCache(on) {
+  S.cacheOn = on;
+  db.setPref('cacheOn', on);
+  if (on) Sniffer.start(); else Sniffer.stop();
+  say(on ? 'cache on: reading ahead in the background' : 'cache off: only what you open is kept');
+  drawRoundKeys();
+}
+
+async function askFly() {
+  const q = await nameBox('✈ fly-through: what to look for (a name, a place, a land use; one per comma)', db.pref('flyQuery', '') || 'jaša');
+  if (q == null) return;
+  db.setPref('flyQuery', q);
+  showFound([]);
+  Flyer.start(q);
+  drawRoundKeys();
+  say(`✈ flying: "${q}" · scanning where the map rests`);
+  Flyer.viewSettled(S.map.getBounds(), S.map.getZoom());
+}
+
+function wireBackground() {
+  // The service lights and their log: every change said on the map and kept.
+  Services.listeners.add((e) => {
+    drawLights();
+    if (!e) return;
+    db.set('serviceLog', Services.log).catch(() => {});
+    say(Services.eventLine(e, hhmm));
+    if (document.querySelector('#settings')) settings.refresh?.();
+  });
+  drawLights();
+  $('#lights').addEventListener('click', () => settings());
+  lightCheck();
+  // The sniffer.
+  Sniffer.criteria = Sn.criteria(S.cacheKeywords);
+  Sniffer.onSheet = (p, rec, folios) => addToImenik(p, rec, folios);
+  Sniffer.onChange = (t) => statusLine('sniffline', S.cacheOn && t.busy ? Sn.line(t, Sniffer.criteria) : null);
+  if (S.cacheOn) Sniffer.start();
+  // Fly-through.
+  Flyer.onChange = (st) => statusLine('flyline', st.on ? Sn.flyLine(st) : null);
+  Flyer.onFound = (p, why) => {
+    showFound([...S.found.filter((x) => x.id !== p.id), p]);
+    if (p.rings?.length) select(p);
+    say(`✈ found ${p.number}: ${why} · selected${p.rings?.length ? '' : ' (outline not yet)'}`);
+  };
+  drawRoundKeys();
 }
 
 // --- full screen (web v2) ------------------------------------------------------------------------
@@ -148,20 +240,26 @@ function buildFields() {
     const out = h('div.fieldresults', { id: 'parcel-results' });
     let timer = null;
     let asked = 0;
+    const line = h('div.fieldline', { id: 'parcel-line', hidden: true });
     const find = async (text, full) => {
       const my = ++asked;
-      const hits = await parcelSearch(text.trim(), full);
+      const { hits, said } = await parcelSearch(text.trim(), full);
       if (my !== asked) return;
+      line.hidden = !said; line.textContent = said ?? '';
+      // SEARCH OPENS IT (v3, Android v11): the one exact number goes to the map and its sheet.
+      const q = full ? Q.parse(text) : null;
+      const one = q ? Q.best(hits, q.number) : null;
+      if (one) { remember('parcel', text); out.replaceChildren(); line.hidden = true; openHit(one); return; }
       out.replaceChildren(hits.length ? results(hits, (x) => { remember('parcel', text); out.replaceChildren(); openHit(x); }, distanceLabel)
         : (text.trim().length >= 1 && full ? h('div.dim.pad', {}, 'ništa nije pronađeno') : ''));
     };
     const { wrap } = searchBox({
-      id: 'parcel-field', placeholder: 'čestica: 2449/2, pl 1984, ime', history: () => S.history.parcel ?? [],
+      id: 'parcel-field', placeholder: 'čestica (i k.o.): 1358/3 kukljica, pl 1984, ime', history: () => S.history.parcel ?? [],
       oninput: (t) => { clearTimeout(timer); timer = setTimeout(() => find(t, false), 250); },
-      onsubmit: (t) => { remember('parcel', t); find(t, true); },
+      onsubmit: (t) => { remember('parcel', t); municipalityHere.cache?.clear(); find(t, true); },
       onpickPast: (t) => find(t, true),
     });
-    box.append(h('div.fieldwrap', {}, wrap, out));
+    box.append(h('div.fieldwrap', {}, wrap, line, out));
   }
 }
 
@@ -172,29 +270,58 @@ async function municipalityHere() {
   if (municipalityHere.cache.has(k)) return municipalityHere.cache.get(k);
   const m = await net.municipalityAt(c.lat, c.lng).catch(() => null);
   municipalityHere.cache.set(k, m);
+  // Every k.o. the map stood over is remembered (v3, Android v11): a number is found there from anywhere.
+  if (m) { S.seenKo = Q.withSeen(S.seenKo, Q.ko(m.reg, m.name, m.id ?? '')); db.set('seenKo', S.seenKo).catch(() => {}); }
   return m;
 }
 
-/** What the parcel field finds: the caches and Imenik on the device first, then OSS. */
+/**
+ * WHAT THE PARCEL FIELD FINDS (v3, Android v11): Moje čestice in every k.o., the caches and Imenik on
+ * the device, then OSS: in the k.o. he named ("1358/3 kukljica"), else the one under the map, and when
+ * that has no such number, every k.o. already known on the device. {hits, said}: said is the line.
+ */
 async function parcelSearch(text, full) {
-  if (!text) return [];
-  const local = [...Cache.search(S.caches, text, 12)];
-  const q = fold(text);
-  const sheet = /^p\.?\s*l\.?\s*(\d+)$/.exec(q)?.[1];
-  const isNumber = /^\*?\d+(\/\d*)?$/.test(q);
-  if (!isNumber && !sheet) local.push(...OwnerBook.search(S.imenik, text, 20).map(OwnerBook.hit));
+  if (!text) return { hits: [], said: null };
+  const cached = [...Cache.search(S.caches, text, 12)];
+  const sheet = /^p\.?\s*l\.?\s*(\d+)$/.exec(fold(text))?.[1];
+  const q = sheet ? null : Q.parse(text);
+  let mine = [];
   let remote = [];
+  let said = null;
+  const local = [...cached];
+  if (!q && !sheet) local.push(...OwnerBook.search(S.imenik, text, 20).map(OwnerBook.hit));
   try {
-    if (isNumber) {
-      const m = await municipalityHere();
-      if (m) remote = await net.suggestions(text, m);
+    if (q) {
+      const known = Q.known(S.seenKo, S.marks, S.caches, S.imenik);
+      const named = q.place ? Q.resolve(q.place, known) : null;
+      if (q.place && !named) {
+        mine = Q.mine(S.marks, q.number, known);
+        said = `k.o. "${q.place}" još nije poznata: pomaknite kartu iznad nje jednom`;
+      } else {
+        mine = Q.mine(S.marks, q.number, known, named);
+        const m = named ?? await municipalityHere();
+        const here = m ? Q.ko(m.reg, m.name, m.id ?? '') : null;
+        const first = here ? await net.suggestions(q.number, { reg: here.reg, name: Q.label(here) }) : [];
+        let others = [];
+        if (!named && !Q.hasExact([...mine, ...first], q.number)) {
+          const lists = await Promise.all(known.filter((k) => k.reg !== here?.reg).slice(0, 8)
+            .map((k) => net.suggestions(q.number, { reg: k.reg, name: Q.label(k) }).catch(() => [])));
+          others = lists.flat();
+        }
+        const elsewhere = [...new Set(others.map((h) => known.find((k) => k.reg === h.ref?.split('-')[0])).filter(Boolean).map(Q.label))];
+        said = [cached.length ? `caches: ${cached.length}` : null, mine.length ? `Moje čestice: ${mine.length}` : null,
+          here ? `k.o. ${Q.label(here)} · ${first.length}` : 'k.o. pod kartom nije poznata',
+          elsewhere.length ? `i u k.o. ${elsewhere.join(', ')}` : null].filter(Boolean).join(' · ');
+        remote = [...first, ...others];
+      }
     } else if (sheet && full) {
       const m = await municipalityHere();
       if (m?.id) remote = await net.ossSearch(m.id, null, sheet);
     }
-  } catch (e) { if (full) say(e.message); }
+  } catch (e) { said = e.message; }
   const seen = new Set();
-  return [...remote, ...local].filter((x) => { const k = x.ref + '|' + x.title; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 20);
+  const hits = [...mine, ...local, ...remote].filter((x) => { const k = x.ref ?? x.title; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 30);
+  return { hits, said };
 }
 
 /** A parcel result: from a cache at once (no signal needed), else its sheet and its outline. */
@@ -203,6 +330,8 @@ async function openHit(x) {
   if (fromCache) return goToParcel(Cache.itemParcel(fromCache), true);
   const mine = S.marks.find((m) => m.reference === x.ref && m.rings.length);
   if (mine) return goToParcel(P.parcel(mine.id, mine.number, mine.reference, null, mine.rings), true);
+  const shape = x.ref ? await net.keptShape(x.ref) : null;
+  if (shape?.rings?.length) return goToParcel(shape, true);
   const number = x.ref.slice(x.ref.indexOf('-') + 1);
   const parcel = P.parcel(Number(x.id) || 0, number, x.ref, null, []);
   openSheet(parcel);
@@ -451,6 +580,8 @@ async function runJob(name, box, zoom, colour, owners) {
     }
     total = found.length;
     if (!total) { progress({ name, stage: 'the state has no čestice in this view', finished: true }); return; }
+    // Every outline a cache reads is kept one by one too (v3, Android v11): found from anywhere.
+    await net.keepShapes(found.map(([p]) => p));
     let items = found.map(([p, label]) => Cache.item({ id: p.id, number: p.number, reference: p.reference, areaM2: p.areaM2, rings: p.rings, label }));
     info = { ...info, count: items.length };
     await saveCache({ info, items });
@@ -621,11 +752,75 @@ function googleHelp(problem) {
 
 export async function settings() {
   const body = h('div');
-  let kept = '…';
+  let size = '…';
+  let counts = { answers: 0, shapes: 0 };
+  let keptOpen = false;
+  let keptList = null;
+  let keptFilter = '';
+  let logOpen = false;
   const render = () => {
     const views = [['roadmap', 'map'], ['satellite', 'satellite'], ['terrain', 'terrain'], ['hybrid', 'hybrid']];
     const paste = h('input.field', { type: 'password', placeholder: 'paste a key (AIza…)', autocomplete: 'off' });
+    const words = h('textarea.field', { id: 'cache-keywords', rows: 2, placeholder: 'surnames, first names, anything: boško, gobić, maslinik' });
+    words.value = S.cacheKeywords;
+    words.addEventListener('input', () => {
+      S.cacheKeywords = words.value; db.setPref('cacheKeywords', words.value); Sniffer.criteria = Sn.criteria(words.value);
+    });
+    const filter = h('input.field', { type: 'search', placeholder: 'broj, prezime ili mjesto', id: 'kept-filter', value: keptFilter });
+    filter.addEventListener('input', () => { keptFilter = filter.value; drawKept(); });
+    const keptRows = h('div', { id: 'kept-list' });
+    const drawKept = () => {
+      if (!keptList) { keptRows.replaceChildren(h('div.dim.pad', {}, 'reading what is kept…')); return; }
+      const shown = Sn.filterKept(keptList, keptFilter);
+      keptRows.replaceChildren(
+        ...shown.slice(0, 200).map((k) => h('button.row.keptrow', { type: 'button', onclick: () => openKept(k.municipalityReg, k.number) },
+          h('span.num', {}, k.number), h('span.under', {}, Sn.keptWords(k)))),
+        shown.length > 200 ? h('div.dim.pad', {}, `and ${shown.length - 200} more: type to narrow`) : null,
+        keptList.length ? null : h('div.dim.pad', {}, 'none yet: a sheet you open, or one the cache reads, is kept'));
+    };
+    drawKept();
+    const now = Date.now();
     body.replaceChildren(
+      // WHAT THE DEVICE KEEPS, ON TOP (v3, Android v12): the size, the Cache switch, the keywords.
+      group('Kept on this phone',
+        h('div.row', {}, h('span.col', {}, h('span.title', { id: 'kept-size' }, `${size} · ${counts.answers} sheets and answers · ${counts.shapes} outlines`),
+          h('span.under', {}, 'ARKOD tiles and map tiles seen are kept by the browser too')),
+        iconAction('trash', 'clear', async (e) => {
+          const b = e.currentTarget;
+          if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.querySelector('.nm').textContent = 'again'; return; }
+          await db.clearPrefix('ans:'); await db.clearPrefix('shape:');
+          for (const n of ('caches' in globalThis ? await caches.keys() : []).filter((x) => x.startsWith('arkod-') && !x.startsWith('arkod-app'))) await caches.delete(n);
+          keptList = []; await measure(); render();
+        }, { danger: true, id: 'kept-clear' })),
+        opens('Kept čestice', 'parcels', keptList ? `${keptList.length}` : 'number, surname, place', async () => {
+          keptOpen = !keptOpen;
+          if (keptOpen && !keptList) { render(); keptList = Sn.kept(await net.keptRecords()); }
+          render();
+        }, { id: 'kept-open' }),
+        keptOpen ? h('div', {}, h('div.pad', {}, filter), keptRows) : null,
+        toggle('Cache', 'sniff', S.cacheOn, (on) => { setCache(on); render(); }, { id: 'set-cache' }),
+        h('div.pad', {}, h('div.title', {}, 'Cache criteria (keywords)'), words,
+          h('div.under', {}, 'One per comma. With keywords, a sheet read in the background is kept only when a name, place or land use on it fits one of them. Empty: everything is kept. What you open yourself is always kept.'))),
+      // THE SERVICES (v3, Android v14 and v16): the lights, what each does, the log, and why.
+      group('Services',
+        ...Services.SERVICES.map((sv) => {
+          const hh = Services.health.get(sv.id);
+          const l = Services.light(hh);
+          return h('div.row.service', { dataset: { service: sv.id, light: l } },
+            h('i.led.big.' + l.toLowerCase()),
+            h('span.col', {},
+              h('span.title', {}, `${sv.short} · ${sv.title}`),
+              h('span.under' + (l === 'RED' ? '.red' : ''), {}, sv.id === 'GOOGLE' && l === 'GREY' ? 'not asked yet (never checked on its own: every request is on your key)' : Services.said(hh, now, hhmm)),
+              h('span.under', {}, sv.does),
+              l === 'RED' ? h('span.under.sand', {}, `While it is down: ${sv.whenDown}`) : null));
+        }),
+        action('Check now', 'play', async () => { await checkAll(); render(); }, { quiet: true, id: 'check-now' }),
+        opens('Service log', 'text', Services.log.length ? `${Services.log.length} changes` : 'nothing yet', () => { logOpen = !logOpen; render(); }, { id: 'log-open' }),
+        logOpen ? h('div', { id: 'service-log' }, Services.log.slice(0, 100).map((e) => h('div.logrow', {}, h('i.led.' + (e.online ? 'green' : 'red')),
+          Services.eventLine(e, (t) => new Date(t).toLocaleString('hr-HR', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }))))) : null,
+        h('div.under.pad', {}, 'All four ARKOD services are the State Geodetic Administration\'s (DGU): the map (WMS) and the outlines (WFS) at api.uredjenazemlja.hr, the cadastre and the land registry at oss.uredjenazemlja.hr. ' +
+          'They fail on their side: "ORA-01000: maximum open cursors exceeded" is their Oracle database running out of connections, which lasts until they restart it, and they are slow or down at some hours. Nothing on this device can fix that. ' +
+          'What the app does: everything read is kept (tiles, sheets, outlines, searches) and used when a service is red; the cache key reads ahead while they answer; every change is in the log above, so the hours can be seen.')),
       group('Moje čestice',
         opens('Moje čestice', 'parcels', `${S.marks.length} kept`, mojeCestice, { id: 'set-mine' }),
         opens('Parcel view', 'layers', 'the Show/hide ARKOD layer key: lines, caches', parcelView),
@@ -642,13 +837,6 @@ export async function settings() {
           iconAction('trash', 'delete', async () => { S.keys = S.keys.filter((x) => x !== k); await saveKeys(); buildFields(); render(); }, { danger: true }))),
         h('div.row', {}, paste, iconAction('check', 'add', async () => { await addKeys(paste.value); render(); })),
         action('Key from a file', 'folder', () => $('#key-file').click(), { quiet: true })),
-      group('Offline',
-        h('div.row', {}, h('span.col', {}, h('span.title', {}, 'Kept on this device'), h('span.under', { id: 'kept' }, kept)),
-          iconAction('trash', 'clear', async () => {
-            for (const n of await caches_keys()) await globalThis.caches.delete(n);
-            kept = 'cleared'; render();
-          }, { danger: true })),
-        h('div.under.pad', {}, 'OFF shows the map tiles already seen. The ARKOD layer, sheets and map tiles you looked at are kept for no signal.')),
       group('Install',
         opens('Add ARKOD Layer to the home screen', 'save', 'iPhone, Android', () => { location.href = 'install/'; }, { id: 'set-install' })),
       group('About',
@@ -657,14 +845,15 @@ export async function settings() {
             h('span.under', {}, 'katastar: Državna geodetska uprava (uredjenazemlja.hr) · © OpenStreetMap contributors · Leaflet · Google')))),
     );
   };
-  const caches_keys = async () => ('caches' in globalThis ? (await globalThis.caches.keys()).filter((n) => n.startsWith('arkod-')) : []);
+  const measure = async () => {
+    try { const est = await navigator.storage?.estimate?.(); size = est ? Sn.megabytes(est.usage ?? 0) : 'size unknown'; } catch { size = 'size unknown'; }
+    counts = { answers: (await db.keys('ans:')).length, shapes: (await db.keys('shape:')).length };
+  };
+  settings.refresh = render;
   render();
-  showFace(face('settings', 'Settings', closeFace, body, { id: 'settings' }));
-  try {
-    const est = await navigator.storage?.estimate?.();
-    kept = est ? `${Math.round((est.usage ?? 0) / 1e6)} MB` : 'unknown';
-    const el = document.querySelector('#kept'); if (el) el.textContent = kept;
-  } catch { /* the size is only a courtesy */ }
+  showFace(face('settings', 'Settings', () => { settings.refresh = null; closeFace(); }, body, { id: 'settings' }));
+  await measure();
+  render();
 }
 
 export { drawMine, topLine };

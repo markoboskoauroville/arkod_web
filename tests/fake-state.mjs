@@ -75,6 +75,8 @@ export function info(params) {
   const [s, w, n, e] = params.get('BBOX').split(',').map(Number);
   const lat = (s + n) / 2, lon = (w + e) / 2;
   if (layer === 'cp:CP.CadastralZoning') {
+    // North of 45° is Zagreb's CENTAR NOVI, which has no such numbers (the screenshot of 30.9.2026).
+    if (lat > 45) return `Results for FeatureType 'http://cp_wms:CP.CadastralZoning':\n--------------------------------------------\nID = 9\nLABEL = 335266-CENTAR NOVI\n--------------------------------------------`;
     return `Results for FeatureType 'http://cp_wms:CP.CadastralZoning':\n--------------------------------------------\nID = ${MUNI.id}\nLABEL = ${MUNI.reg}-${MUNI.name}\n--------------------------------------------`;
   }
   const [cx, cy] = cellAt(lat, lon);
@@ -139,6 +141,7 @@ export function oss(path, params, body) {
   if (path === 'lr/lr-unit') return folio;
   if (path === 'search-cad-parcels/parcel-numbers') {
     const q = params.get('search') ?? '';
+    if (params.get('municipalityRegNum') !== MUNI.reg) return JSON.stringify([]);
     const found = [];
     for (let cx = -3; cx <= 3; cx++) for (let cy = -3; cy <= 3; cy++) { const p = parcelOf(cx, cy); if (p.number.startsWith(q)) found.push({ key1: String(p.id), value1: p.number }); }
     return JSON.stringify(found.slice(0, 12));

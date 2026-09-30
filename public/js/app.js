@@ -14,6 +14,8 @@ import * as net from './net.js';
 import { arkodLayer, dashOf, WIDTHS } from './layer.js';
 import { h, action, toggle, choice, opens, pick, iconAction, group, face, results, searchBox, nameBox, iconEl } from './ui.js';
 import { icon } from './icons.js';
+import * as Services from './core/services.js';
+import { Sniffer, Flyer } from './scan.js';
 
 // --- state ---------------------------------------------------------------------------------------
 
@@ -28,6 +30,11 @@ export const S = {
   onlyMine: db.pref('onlyMine', false),
   parcelSearchOn: db.pref('parcelSearchOn', true),
   ownLines: db.pref('ownLines', true),
+  // THE CACHE KEY (v3, Android v12): tiles kept ahead and the sniffer; one switch.
+  cacheOn: db.pref('cacheOn', true),
+  cacheKeywords: db.pref('cacheKeywords', ''),
+  seenKo: [],
+  found: [],
   cacheOwners: db.pref('cacheOwners', true),
   lines: Style.lines(),
   marks: [],
@@ -86,6 +93,8 @@ export function say(text, { keep = false } = {}) {
 // --- the layer kept ahead where the map rests (FEATURES row 23) ---------------------------------
 
 let keepTimer = null;
+let restTimer = null;
+let foundLayer = null;
 let keptAround = null;
 /**
  * When the map has rested four seconds, the state's tiles round its middle (3 km at z14 down to
@@ -93,7 +102,7 @@ let keptAround = null;
  * Only with a service worker, a signal, the layer on, and once per kilometre moved.
  */
 async function keepAround() {
-  if (!navigator.serviceWorker?.controller || !navigator.onLine || !S.cadastreOn || S.map.getZoom() < P.MIN_ZOOM - 1) return;
+  if (!S.cacheOn || !navigator.serviceWorker?.controller || !navigator.onLine || !S.cadastreOn || S.map.getZoom() < P.MIN_ZOOM - 1) return;
   const c = S.map.getCenter();
   if (keptAround && distance(keptAround[0], keptAround[1], c.lat, c.lng) < 1000) return;
   keptAround = [c.lat, c.lng];
@@ -138,6 +147,7 @@ function buildMap() {
   });
   arkod.addTo(map);
   minePane = L.layerGroup([], { pane: 'mine' }).addTo(map);
+  foundLayer = L.layerGroup([], { pane: 'mine' }).addTo(map);
   selectionLayer = L.layerGroup([], { pane: 'mine' }).addTo(map);
   map.on('move', topLine);
   map.on('moveend', () => {
@@ -146,6 +156,12 @@ function buildMap() {
     topLine();
     clearTimeout(keepTimer);
     keepTimer = setTimeout(keepAround, 4000);
+    // THE SNIFFER AND FLY-THROUGH (v3): where the map rests, read what is under it.
+    clearTimeout(restTimer);
+    restTimer = setTimeout(() => {
+      if (S.cacheOn) Sniffer.viewSettled(map.getBounds(), map.getZoom());
+      Flyer.viewSettled(map.getBounds(), map.getZoom());
+    }, 800);
   });
   map.on('dragstart', () => { S.atFix = false; });
   keepTimer = setTimeout(keepAround, 4000);
@@ -197,6 +213,12 @@ async function showLayer(id) {
       return;
     }
     saveKeys();
+  }
+  // A LIGHT FOR EVERY SERVICE (v3): the map's own tiles report too (not the OFF map: a miss there is normal).
+  if (id !== 'off') {
+    const probe = id === 'google' ? 'https://tile.googleapis.com/' : 'https://tile.openstreetmap.org/';
+    base.on('tileload', () => Services.ok(probe));
+    base.on('tileerror', () => { if (navigator.onLine) Services.failed(probe, 'a map tile did not come'); else Services.failed(probe, 'no signal'); });
   }
   base.addTo(S.map);
   base.bringToBack();
@@ -261,6 +283,14 @@ function select(parcel) {
   if (parcel?.rings?.length) for (const r of parcel.rings) L.polygon(r, { ...style(P.SELECTION, 'SOLID', 'NORMAL'), weight: 3 }).addTo(selectionLayer);
 }
 
+/** WHAT FLY-THROUGH FOUND (v3, Android v16): drawn bold magenta, under the selection. */
+export const FOUND_COLOUR = 0xFFE040FB;
+function showFound(list) {
+  S.found = list;
+  foundLayer.clearLayers();
+  for (const p of list) for (const r of p.rings ?? []) L.polygon(r, { ...style(FOUND_COLOUR, 'SOLID', 'BOLD'), className: 'found' }).addTo(foundLayer);
+}
+
 function showPin(lat, lon) {
   if (pinMarker) pinMarker.remove();
   pinMarker = L.marker([lat, lon], {
@@ -283,6 +313,12 @@ async function tapped(lat, lon) {
   if (m) {
     select(P.parcel(m.id, m.number, m.reference, null, m.rings));
     say(`${m.number}${m.name ? ' · ' + m.name : ''} · dodirnite ponovno za list`);
+    return;
+  }
+  const flown = S.found.find((p) => p.rings?.some((r) => P.contains(r, lat, lon)));
+  if (flown) {
+    select(flown);
+    say(`${flown.number} · found by ✈ · dodirnite ponovno za list`);
     return;
   }
   const cached = Cache.at(S.caches, lat, lon);
@@ -318,6 +354,8 @@ async function goToNumber(muniReg, number) {
   if (known) return goToParcel(Cache.itemParcel(known));
   const mine = S.marks.find((m) => m.reference === ref && m.rings.length);
   if (mine) return goToParcel(P.parcel(mine.id, mine.number, mine.reference, null, mine.rings));
+  const shape = await net.keptShape(ref);
+  if (shape?.rings?.length) return goToParcel(shape);
   say(`tražim ${number} na karti…`, { keep: true });
   let id;
   try { id = await net.idOf(number, muniReg); } catch (e) { say(e.message); return; }
@@ -365,6 +403,19 @@ async function openSheet(parcel) {
   sheetState.folios = folios;
   renderSheet();
   addToImenik(parcel, rec, folios);
+  // THE SNIFFER FOLLOWS (v3, Android v12): the other parcels of this owner sheet.
+  if (S.cacheOn) Sniffer.follow(rec, folios);
+}
+
+/** A kept parcel from the settings' list (v3, Android v13): from the device, sheet and all. */
+async function openKept(muniReg, number) {
+  const ref = `${muniReg}-${number}`;
+  closeFace();
+  const shape = await net.keptShape(ref);
+  const mine = S.marks.find((m) => m.reference === ref && m.rings.length);
+  const p = shape?.rings?.length ? shape : mine ? P.parcel(mine.id, mine.number, mine.reference, null, mine.rings) : null;
+  if (!p || !p.id) return goToNumber(muniReg, number);
+  return goToParcel(p, true);
 }
 
 async function addToImenik(parcel, rec, folios) {
@@ -587,7 +638,7 @@ export function closeFace() {
 }
 
 export {
-  showLayer, applyVisibility, openSheet, goToParcel, goToNumber, select, showPin, whereAmI, remember, saveMarks, fillShapes,
+  showLayer, applyVisibility, openSheet, goToParcel, goToNumber, openKept, showFound, addToImenik, select, showPin, whereAmI, remember, saveMarks, fillShapes,
   giveFile, drawMine, inkNow, topLine,
 };
 
@@ -605,6 +656,8 @@ export async function loadState() {
   S.history = (await db.get('history', {})) ?? {};
   S.keys = (await db.get('keys', [])) ?? [];
   S.folioLinks = (await db.get('folioLinks', {})) ?? {};
+  S.seenKo = (await db.get('seenKo', [])) ?? [];
+  Services.restore((await db.get('serviceLog', [])) ?? []);
   const infos = (await db.get('caches', [])) ?? [];
   S.caches = [];
   for (const t of infos) {

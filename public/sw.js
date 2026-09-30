@@ -5,7 +5,7 @@
 //  - OSS answers (/api/oss GET): the network first, the kept answer when there is none, marked X-Kept-At;
 //  - the WFS, OSS searches (POST) and Google: the network only (Google's terms; searches are live).
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const APP = `arkod-app-${VERSION}`;
 const TILES = 'arkod-tiles';
 const WMS = 'arkod-wms';
@@ -16,7 +16,7 @@ const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'version.json',
   'js/app.js', 'js/faces.js', 'js/ui.js', 'js/icons.js', 'js/db.js', 'js/net.js', 'js/layer.js',
   'js/core/parcels.js', 'js/core/style.js', 'js/core/cache.js', 'js/core/markfile.js', 'js/core/ownerbook.js',
-  'js/core/finding.js', 'js/core/geo.js', 'js/core/outline.js',
+  'js/core/finding.js', 'js/core/geo.js', 'js/core/outline.js', 'js/core/query.js', 'js/core/sniff.js', 'js/core/services.js', 'js/scan.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
   'install/', 'install/index.html',
 ];

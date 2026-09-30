@@ -6,15 +6,62 @@ import * as Cache from './core/cache.js';
 import { parcelAt, box as outlineBox } from './core/outline.js';
 import { merge, withoutHouseLetter, Source, hit } from './core/finding.js';
 import { distance } from './core/geo.js';
+import * as Services from './core/services.js';
+import * as db from './db.js';
 
 export const API = { wms: '/api/wms', wfs: '/api/wfs', oss: '/api/oss' };
 
 async function text(url, init) {
   let r;
-  try { r = await fetch(url, init); } catch { throw new Error('nema signala ili država ne odgovara'); }
+  try { r = await fetch(url, init); } catch (e) {
+    if (e?.name !== 'AbortError') Services.failed(url, 'no answer (no signal, or the state is down)');
+    throw new Error('nema signala ili država ne odgovara');
+  }
   const t = await r.text();
-  if (!r.ok) throw new Error(P.stateReason(t) ?? `država je odgovorila ${r.status}`);
+  if (!r.ok) {
+    const why = P.stateReason(t);
+    // A LIGHT FOR EVERY SERVICE (v3): a 404 is an answer (no such folio), anything else is trouble.
+    if (r.status === 404) Services.ok(url); else Services.failed(url, why ?? `answered ${r.status}`);
+    throw new Error(why ?? `država je odgovorila ${r.status}`);
+  }
+  // The service worker answered from the device because the state did not: the service is down.
+  if (r.headers.get('X-Kept-At')) Services.failed(url, 'no answer; the kept copy was used'); else Services.ok(url);
   return { text: t, keptAt: r.headers.get('X-Kept-At') };
+}
+
+/**
+ * CACHE KING (v3, Android v11): the state's answer to a GET, kept on the device; when the state does
+ * not answer, the kept one, with when it was read. Sheets, owner sheets, searches, land books.
+ */
+async function kept(url, { keep = true } = {}) {
+  try {
+    const got = await text(url);
+    if (keep) db.set('ans:' + url, { t: got.text, at: Date.now() }).catch(() => {});
+    return got;
+  } catch (e) {
+    const old = await db.get('ans:' + url, null).catch(() => null);
+    if (old) return { text: old.t, keptAt: new Date(old.at).toISOString() };
+    throw e;
+  }
+}
+
+/** For the sniffer: the answer, not kept (it keeps only what fits his keywords). */
+export async function peek(url) {
+  const old = await db.get('ans:' + url, null).catch(() => null);
+  if (old) return { text: old.t, keptAt: new Date(old.at).toISOString(), wasKept: true };
+  return { ...(await text(url)), wasKept: false };
+}
+export const keep = (url, t) => db.set('ans:' + url, { t, at: Date.now() });
+
+/** The parcels whose sheet is kept (v3, Android v13): each record kept, parsed. */
+export async function keptRecords() {
+  const out = [];
+  for (const k of await db.keys('ans:')) {
+    if (!k.includes('/cad/parcel-info')) continue;
+    const v = await db.get(k, null);
+    try { const r = P.parseRecord(v.t); if (r.number && r.municipalityNumber) out.push(r); } catch { /* not a record */ }
+  }
+  return [...new Map(out.map((r) => [r.municipalityNumber + '-' + r.number, r])).values()];
 }
 
 /** The parcel under a point: id, number, municipality (GetFeatureInfo, a fifth of a second). */
@@ -35,8 +82,9 @@ export async function municipalityAt(lat, lon) {
 /** A picture of the state's lines, as a canvas-readable bitmap. */
 async function picture(url) {
   let r;
-  try { r = await fetch(url); } catch { throw new Error('nema signala'); }
-  if (!r.ok) throw new Error(`država je odgovorila ${r.status}`);
+  try { r = await fetch(url); } catch { Services.failed(url, 'no answer'); throw new Error('nema signala'); }
+  if (!r.ok) { Services.failed(url, `answered ${r.status}`); throw new Error(`država je odgovorila ${r.status}`); }
+  Services.ok(url);
   return createImageBitmap(await r.blob());
 }
 
@@ -66,13 +114,13 @@ export async function outline(lat, lon) {
 
 /** The possession sheet and what it says; keptAt when it came off the device with no signal. */
 export async function record(parcelId) {
-  const { text: t, keptAt } = await text(P.recordUrl(parcelId, API.oss));
+  const { text: t, keptAt } = await kept(P.recordUrl(parcelId, API.oss));
   return { record: P.parseRecord(t), keptAt };
 }
 
 export async function folio(bookId, unit) {
   try {
-    const { text: t } = await text(P.folioUrl(bookId, unit, API.oss));
+    const { text: t } = await kept(P.folioUrl(bookId, unit, API.oss));
     return P.parseFolio(t);
   } catch { return null; }
 }
@@ -86,14 +134,14 @@ export async function ownerSheets(rec) {
 
 /** Where the state has no link: the land book by the municipality's name, then the number typed. */
 export async function findOwnerSheets(municipality, number, isFolio) {
-  const { text: t } = await text(P.booksUrl(municipality, API.oss));
+  const { text: t } = await kept(P.booksUrl(municipality, API.oss));
   const books = P.parseBooks(t, municipality);
   if (!books.length) throw new Error(`nema zemljišne knjige imena ${municipality}`);
   for (const book of books) {
     let units = [];
     if (isFolio) units = [number];
     else {
-      try { units = P.parseFolioNumbers((await text(P.foliosByParcelUrl(book.id, number, API.oss))).text); } catch { units = []; }
+      try { units = P.parseFolioNumbers((await kept(P.foliosByParcelUrl(book.id, number, API.oss))).text); } catch { units = []; }
     }
     const found = (await Promise.all([...new Set(units)].map((u) => folio(book.id, u)))).filter(Boolean);
     if (found.length) return found.map((f) => ({ ...f, bookId: book.id }));
@@ -111,13 +159,13 @@ export async function ossSearch(municipalityId, number = null, sheet = null) {
 
 /** Numbers as he types them, from OSS: a tenth of a second. */
 export async function suggestions(number, muni) {
-  const { text: t } = await text(P.searchUrl(number, muni.reg, API.oss));
+  const { text: t } = await kept(P.searchUrl(number, muni.reg, API.oss));
   return P.parseSuggestions(t, muni.reg, muni.name);
 }
 
 /** The id of exactly that number in a municipality. */
 export async function idOf(number, muniReg) {
-  const { text: t } = await text(P.searchUrl(number, muniReg, API.oss));
+  const { text: t } = await kept(P.searchUrl(number, muniReg, API.oss));
   return P.parseSearchId(t, number);
 }
 
@@ -126,11 +174,19 @@ export async function idOf(number, muniReg) {
  * tried again [tries] times, waiting as the cache job waits, and the state's own reason is kept.
  */
 export async function shapes(references, { tries = 3, onWait = null, signal = null } = {}) {
+  if (!references.length) return [];
+  // CACHE KING (v3, Android v11): an outline read once comes off the device; only the unknown ones
+  // are asked, and when the WFS fails (ORA-01000) the kept ones still come back.
+  const keptShapes = (await Promise.all(references.map((r) => db.get('shape:' + r, null).catch(() => null)))).filter(Boolean);
+  const missing = references.filter((r) => !keptShapes.some((k) => k.reference === r));
+  if (!missing.length) return keptShapes;
   let last = null;
   for (let attempt = 1; attempt <= tries; attempt++) {
     try {
-      const { text: t } = await text(P.byReferenceUrl(references, API.wfs), { signal });
-      return P.parseParcels(t);
+      const { text: t } = await text(P.byReferenceUrl(missing, API.wfs), { signal });
+      const fresh = P.parseParcels(t);
+      await keepShapes(fresh);
+      return [...keptShapes, ...fresh];
     } catch (e) {
       last = e;
       if (attempt === tries || signal?.aborted) break;
@@ -139,7 +195,29 @@ export async function shapes(references, { tries = 3, onWait = null, signal = nu
       await sleep(wait * 1000, signal);
     }
   }
+  if (keptShapes.length) return keptShapes;
   throw last ?? new Error('država nije odgovorila');
+}
+
+/** Outlines kept one by one, from wherever they came (the WFS, a cache job, a file). */
+export async function keepShapes(parcels) {
+  await Promise.all(parcels.filter((p) => p.rings?.length && p.reference).map((p) => db.set('shape:' + p.reference, p).catch(() => {})));
+}
+export const keptShape = (ref) => db.get('shape:' + ref, null).catch(() => null);
+
+/**
+ * THE LIGHT CHECK (v3, Android v14): one small question to a quiet service, about Kukljica's own
+ * 1358/3. Never Google: every request there is on his key. Not kept; reported by [text].
+ */
+export async function check(id) {
+  const ask = {
+    WMS: () => text(P.infoUrl(44.01732, 15.24945, 'cp:CP.CadastralParcel', API.wms)),
+    OSS: () => text(P.recordUrl(6436001, API.oss)),
+    ZK: () => text(P.booksUrl('KUKLJICA', API.oss)),
+    WFS: () => text(P.byReferenceUrl(['334723-1358/3'], API.wfs)),
+    OSM: () => text('https://tile.openstreetmap.org/0/0/0.png'),
+  }[id];
+  if (ask) await ask().catch(() => {});
 }
 
 /** One page of every parcel in a box, with their number points. */
@@ -178,8 +256,10 @@ export async function googleSession(view, key) {
   if (!r.ok) {
     let said = null;
     try { said = JSON.parse(t).error?.message; } catch { /* not JSON */ }
+    Services.failed('https://tile.googleapis.com/', said ?? `answered ${r.status}`);
     throw new Error(said ? `Google: ${said}` : `Google answered ${r.status}`);
   }
+  Services.ok('https://tile.googleapis.com/');
   const token = JSON.parse(t).session;
   if (!token) throw new Error('Google gave no session');
   sessions.set(k, { token, at: Date.now() });
@@ -194,13 +274,16 @@ export const googleTileUrl = (session, key) =>
 async function places(url, key, body, fields) {
   const headers = { 'Content-Type': 'application/json', 'X-Goog-Api-Key': key };
   if (fields) headers['X-Goog-FieldMask'] = fields;
-  const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+  let r;
+  try { r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) }); } catch (e) { Services.failed(url, 'no answer'); throw e; }
   const t = await r.text();
   if (!r.ok) {
     let said = null;
     try { said = JSON.parse(t).error?.message; } catch { /* not JSON */ }
+    Services.failed(url, said ?? `answered ${r.status}`);
     throw new Error(`Google: ${said ?? r.status}`);
   }
+  Services.ok(url);
   return JSON.parse(t);
 }
 

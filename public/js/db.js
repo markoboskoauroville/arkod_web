@@ -56,3 +56,34 @@ export function pref(key, fallback) {
 export function setPref(key, value) {
   try { localStorage.setItem('arkod.' + key, JSON.stringify(value)); } catch { /* private mode: kept for this visit only */ }
 }
+
+/** Every key that begins with [prefix] (v3: kept answers, outlines, kept parcels). */
+export async function keys(prefix) {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const r = db.transaction('kv').objectStore('kv').getAllKeys(IDBKeyRange.bound(prefix, prefix + '￿'));
+    r.onsuccess = () => resolve(r.result.map(String));
+    r.onerror = () => reject(r.error);
+  });
+}
+
+/** Every value whose key begins with [prefix]. */
+export async function values(prefix) {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const r = db.transaction('kv').objectStore('kv').getAll(IDBKeyRange.bound(prefix, prefix + '￿'));
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+
+/** Everything whose key begins with [prefix], gone. */
+export async function clearPrefix(prefix) {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const t = db.transaction('kv', 'readwrite');
+    t.objectStore('kv').delete(IDBKeyRange.bound(prefix, prefix + '￿'));
+    t.oncomplete = () => resolve();
+    t.onerror = () => reject(t.error);
+  });
+}

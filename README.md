@@ -15,6 +15,9 @@ Both follow one list, [`mantra_arkod/FEATURES.md`](https://github.com/markobosko
   `manifest.webmanifest`, `sw.js` (the service worker).
 - `public/js/core/`: the Android app's pure logic, ported from Kotlin (Parcels, ParcelStyle, ParcelCache,
   MarkFile, OwnerBook, Finding, Outline). `tests/core.test.mjs` holds the Android CoreTest cases, ported.
+- Version 3 (level with the Android app v16): the parcel field finds a number wherever the map is; everything read is kept
+  (IndexedDB `ans:` answers, `shape:` outlines); the cache key and its keywords (`scan.js` Sniffer); fly-through scanning, the
+  airplane (`scan.js` Flyer); a light for every service with its log (`core/services.js`).
 - `functions/`: three Cloudflare Pages Functions that ask the state for the browser.
   They are `/api/wms`, `/api/wfs` and `/api/oss/*`.
   OSS refuses a browser's Origin, and the WMS sends no CORS header.
