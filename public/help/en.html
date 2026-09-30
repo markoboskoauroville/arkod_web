@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ARKOD Layer help</title>
+<meta name="theme-color" content="#0B0D10">
+<style>
+  :root { --ground:#0B0D10; --card:#16191D; --raised:#2C323A; --line:#262B31; --sand:#F2DDB4; --text:#E8E4DC; --dim:#9AA0A6; --amber:#E8A64B; --green:#34D399; --red:#EF4444; --magenta:#E040FB; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) 16px 64px; }
+  h1 { font-size: 24px; color: var(--sand); margin: 8px 0 4px; }
+  h2 { font-size: 19px; color: var(--sand); margin: 36px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 16px; color: var(--sand); margin: 20px 0 6px; }
+  p, li { margin: 6px 0; }
+  a { color: var(--sand); }
+  .lang { display: flex; gap: 8px; margin: 8px 0 16px; }
+  .lang a { padding: 6px 12px; border-radius: 10px; border: 1px solid #3a4048; text-decoration: none; }
+  .lang a.on { background: var(--raised); color: #fff; border-color: var(--raised); }
+  .dim { color: var(--dim); font-size: 14px; }
+  .toc { background: var(--card); border-radius: 14px; padding: 12px 16px; columns: 2; column-gap: 24px; font-size: 14px; }
+  .toc a { display: block; padding: 3px 0; text-decoration: none; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0; }
+  td, th { border-top: 1px solid var(--line); padding: 8px 6px; text-align: left; vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; }
+  code, .k { font: 14px ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; color: var(--sand); white-space: nowrap; }
+  .box { background: var(--card); border-radius: 14px; padding: 12px 16px; margin: 12px 0; }
+  .led { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin: 0 3px; }
+  .g { background: var(--green); } .r { background: var(--red); } .y { background: #6B7280; }
+  .tag { font-size: 12px; background: var(--raised); color: #fff; border-radius: 6px; padding: 1px 6px; margin-left: 4px; }
+  @media (max-width: 520px) { .toc { columns: 1; } }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="../" style="display:inline-block;margin:0 0 4px;text-decoration:none">← ARKOD Layer</a><!-- web only -->
+<div class="lang"><a class="on" href="en.html">English</a><a href="hr.html">Hrvatski</a></div>
+<h1>ARKOD Layer: how it works and how to use it</h1>
+<p class="dim">For the Android app and the web app (arkod-layer.pages.dev). The two work the same way; where they differ, it says <span class="tag">Android</span> or <span class="tag">web</span>. Settings are in English; everything of the cadastre is in Croatian, as the state writes it.</p>
+
+<nav class="toc">
+  <a href="#what">1. What the app is</a>
+  <a href="#screen">2. The screen</a>
+  <a href="#tap">3. A parcel: tap, sheet, tabs</a>
+  <a href="#find">4. Finding a parcel</a>
+  <a href="#mine">5. Moje čestice</a>
+  <a href="#view">6. Parcel view and lines</a>
+  <a href="#caches">7. Parcel caches</a>
+  <a href="#imenik">8. Imenik</a>
+  <a href="#cache">9. The cache key and keywords</a>
+  <a href="#fly">10. Fly-through scanning</a>
+  <a href="#services">11. Services and their lights</a>
+  <a href="#maps">12. The three maps and Google</a>
+  <a href="#under">13. What happens underneath</a>
+  <a href="#trouble">14. When something does not work</a>
+</nav>
+
+<h2 id="what">1. What the app is</h2>
+<p>ARKOD Layer puts the Croatian state's cadastral parcels (čestice) on a map, anywhere in Croatia. A tap on a parcel tells you its number; a second tap opens its sheets: the <b>posjedovni list</b> (who the cadastre says holds it, the land uses, the area) and the <b>vlasnički list</b> from the land registry (who owns it, the shares, the burdens). You can keep your own parcels, colour them, share them as files, read a whole village into the phone for use without signal, and let the app search the map for a name.</p>
+<p>Everything comes from the State Geodetic Administration (DGU), the same public services the portal uredjenazemlja.hr uses. Nothing you do is sent anywhere else. Everything you keep stays on your device.</p>
+
+<h2 id="screen">2. The screen</h2>
+<h3>At the top</h3>
+<ul>
+  <li><b>The coordinates line</b>: where the middle of the map is (<code>N 44 02.160 E 15 15.180</code>), the zoom (<code>z17</code>) and the map shown. <span class="tag">Android</span> also your accuracy, speed and height.</li>
+  <li><b>The service lights</b>: <span class="led g"></span>green, the service answered; <span class="led r"></span>red, it did not; <span class="led y"></span>grey, not asked yet. <code>WMS WFS KAT ZK OSM GOO</code>. A tap opens the settings, where each one is explained (<a href="#services">section 11</a>).</li>
+  <li><b>The Google field</b> (only with a Google key) and <b>the parcel field</b> (<a href="#find">section 4</a>).</li>
+</ul>
+<h3>Over the keys, on the right: the round keys</h3>
+<table>
+  <tr><th>Key</th><th>What it does</th></tr>
+  <tr><td>✈ airplane</td><td><b>Fly-through scanning</b>: write a name or a word, move over the map, and every parcel whose sheet mentions it is outlined and selected (<a href="#fly">section 10</a>). Tap again to land.</td></tr>
+  <tr><td>⛶ full screen</td><td>Only the map is left, with one key to come back. <span class="tag">Android</span> Back also leaves. <span class="tag">web</span> the key is at the top right.</td></tr>
+  <tr><td>((•)) cache</td><td><b>The cache key</b>: lit while the app reads ahead in the background and keeps what it reads (<a href="#cache">section 9</a>). A long press opens the settings.</td></tr>
+</table>
+<h3>The key row at the bottom</h3>
+<table>
+  <tr><th>Key</th><th>What it does</th></tr>
+  <tr><td><code>−</code> and <code>+</code></td><td>Zoom out and in. Pinching works too.</td></tr>
+  <tr><td>◎ where</td><td>Goes to where you are, with a circle for the accuracy. <span class="tag">Android</span> two taps within a second: the map follows you.</td></tr>
+  <tr><td>● record <span class="tag">Android</span></td><td>Records a track (GPX). Pause and the list of tracks are in the settings.</td></tr>
+  <tr><td><code>OFF</code> <code>GOO</code> <code>OSM</code></td><td>The three maps (<a href="#maps">section 12</a>). The one shown is lit.</td></tr>
+  <tr><td>▦ ARKOD</td><td>Tap: hide or show the state's parcel lines (it also brings them back from "Only Moje čestice"). <b>Long press: Parcel view</b> (<a href="#view">section 6</a>).</td></tr>
+  <tr><td>⚙</td><td>Settings: what is kept, the services, Moje čestice, maps, keys, help.</td></tr>
+</table>
+<h3>The lines over the keys</h3>
+<p>The app says what it is doing, always: "tražim 2449/2 na karti…", "cache · 40 read · 12 kept", "✈ scanning 14/25", "16:31 WFS offline · ORA-01000 …". If a line says something is failing, it is the state's service, not your phone (<a href="#trouble">section 14</a>).</p>
+
+<h2 id="tap">3. A parcel: tap, sheet, tabs</h2>
+<ol>
+  <li>Zoom to <code>z15</code> or closer. <b>Tap a parcel</b>: its number appears, and a cyan outline is drawn round it. This works even with the ARKOD layer hidden.</li>
+  <li><b>Tap it again</b>: its sheet opens over the whole screen.</li>
+</ol>
+<p>The sheet has three tabs:</p>
+<ul>
+  <li><b>uporaba</b>: land uses (maslinik, pašnjak, kuća…) and their areas.</li>
+  <li><b>posjedovni</b>: the possession sheet(s): holders, their shares and addresses.</li>
+  <li><b>vlasnički</b>: the land registry folio (z.k. uložak): owners, shares, entries, burdens (tereti). The parcel numbers listed there are <b>links</b>: a tap goes to that parcel on the map. If the cadastre does not link a folio, the app asks for the land-book parcel number or the folio number once, and remembers it.</li>
+</ul>
+<p>On top: the <b>filter</b> (a name, an address, anything; each tab shows how many rows fit), and <code>CPY</code> (copies the whole sheet as text), <code>TXT</code> (sends it as a text file), <code>FILE</code> (sends this parcel as an <code>.arkod.json</code> file that the app opens on another phone). At the bottom, <b>Dodaj u Moje čestice</b> keeps the parcel (<a href="#mine">section 5</a>). A sheet read from the device, with no signal, says when it was read.</p>
+
+<h2 id="find">4. Finding a parcel</h2>
+<p>Type into <b>the parcel field</b> (the dark one):</p>
+<table>
+  <tr><th>You type</th><th>It finds</th></tr>
+  <tr><td><code>2449</code></td><td>Numbers that start with it, as you type, in the k.o. under the map.</td></tr>
+  <tr><td><code>1358/3</code> + Search</td><td>That parcel: <b>wherever the map is</b>. It looks in Moje čestice (every k.o.), in the k.o. under the map, and if that has no such number, in every k.o. the app already knows (from your parcels, caches, Imenik and places the map has been over). The one exact result opens at once: the map goes there and the sheet opens.</td></tr>
+  <tr><td><code>1358/3 kukljica</code></td><td>That number in the k.o. you name (the start of the name is enough, without č ć š ž đ). The k.o. must be known to the app: move the map over it once.</td></tr>
+  <tr><td><code>pl 1984</code></td><td>Every parcel of that posjedovni list, in the k.o. under the map.</td></tr>
+  <tr><td><code>jaša anica</code></td><td>A name: Imenik and your caches (names on sheets already read).</td></tr>
+</table>
+<p>Every search box remembers what you searched: touch it and the history is offered.</p>
+
+<h2 id="mine">5. Moje čestice (my parcels)</h2>
+<ul>
+  <li>On a sheet, switch on <b>Dodaj u Moje čestice</b>; then pick its colour and line (puna, isprekidana, točkasta). It is drawn on every map, in that colour.</li>
+  <li>Settings → <b>Moje čestice</b>: the list, in <b>groups</b>. Tap a group's name for its colour, line, thickness, and to show or hide it. Each parcel can be named (the pencil) or removed (the bin, twice).</li>
+  <li><b>Export</b> a group (the share icon): an <code>.arkod.json</code> file with its parcels, outlines and look. <b>Import</b>: "Import a file" (or open the file with the app <span class="tag">Android</span>, drop it on the map <span class="tag">web</span> on a computer). It becomes a group named after the file. The same file works in both apps.</li>
+</ul>
+
+<h2 id="view">6. Parcel view and lines</h2>
+<p>A long press on ▦ opens <b>Parcel view</b>:</p>
+<ul>
+  <li><b>ARKOD layer</b>: the state's lines on or off. <b>Only Moje čestice</b>: hide everything else. <b>Parcel search</b>: the parcel field on or off.</li>
+  <li><b>Lines</b>: the colour of the state's lines (auto or one of six), their transparency (20 to 100 %) and thickness (Fine, Normal, Bold). The app redraws the state's picture itself, on the device.</li>
+  <li><b>Parcel caches</b>, Moje čestice and Imenik are reached from here too.</li>
+</ul>
+
+<h2 id="caches">7. Parcel caches: a whole place for no signal</h2>
+<p>Parcel view → <b>Cache this view</b>, give it a name. The app reads <b>every parcel in the view</b>: first their outlines (the WFS, 500 at a time), then every posjedovni list, then, if "Also vlasnički listovi" is on, every owner sheet once. A line says each stage, how many of how many, how fast, how long is left, and what failed; <b>stop</b> keeps what was read. When the state's database fails (ORA-01000), the app waits and tries again, eight times over about five minutes, and says so.</p>
+<p>Inside a cache, its own lines are drawn (in its colour, line and thickness, with the numbers), a tap selects from the device, and the parcel field and Imenik find every name, number, sheet, address and land use in it, with no signal. Settings → Parcel caches lists them.</p>
+
+<h2 id="imenik">8. Imenik</h2>
+<p>Every holder and owner of every sheet the device has read goes into <b>Imenik</b>. Search it by name (Parcel view → Imenik, or simply type the name into the parcel field): each name shows its parcel, and a tap opens it.</p>
+
+<h2 id="cache">9. The cache key, keywords, and what is kept</h2>
+<p><b>Everything the app reads is kept</b> on the device: map tiles of the ARKOD layer, every sheet and owner sheet, every search, every parcel outline. Kept things are used whenever a service does not answer, so what you saw once opens again on a hillside.</p>
+<p><b>The cache key</b> ((•)) adds reading ahead: while it is lit,</p>
+<ul>
+  <li>the ARKOD tiles round where the map rests (and round you) are fetched;</li>
+  <li>when the map rests at <code>z16</code> or closer, the parcels on the screen are found (16 points) and their sheets read;</li>
+  <li>when you open a sheet, the other parcels of its owner sheet are read.</li>
+</ul>
+<p>A line says "cache: reading · 40 read · 12 kept". Switch it off when you do not want it (for example on a costly connection): what you open yourself is still kept.</p>
+<p><b>Cache criteria (keywords)</b>, in Settings at the top: write surnames, names or anything, separated by commas, e.g. <code>boško, gobić, maslinik</code>. Then a sheet read in the background is kept only when a name, the place or a land use on it fits one keyword; the others are thrown away. Empty: everything is kept. Each keyword's words must start words on the sheet: <code>bosk</code> finds BOŠKO, <code>boško ivana</code> finds Ivana Boško, <code>ana</code> does not find IVANA.</p>
+<p><b>Kept on this phone</b>, at the top of the settings: the size, how many sheets and outlines, <b>clear</b> (tap twice), and <b>Kept čestice</b>: every parcel whose sheet is kept, by number with three words (surname · place · k.o.), with a filter. A tap opens it from the device.</p>
+
+<h2 id="fly">10. Fly-through scanning</h2>
+<ol>
+  <li>Tap the <b>airplane</b>. Write what to look for: a name (<code>jaša</code>), several (<code>jaša, boško ivana</code>), a place or a land use.</li>
+  <li>Move over the map at <code>z16</code> or closer, and let it rest. Each time it rests, the app asks for the parcels under 25 points across the screen, reads each new one's posjedovni list (and its vlasnički list if the first says nothing).</li>
+  <li>Every parcel that mentions your words gets a <b>thick magenta outline</b> and is selected; the line says <code>found 2449/2 · selecting</code> and the note says what fitted (<code>JAŠA ANICA</code>). Tap a found parcel for its sheet.</li>
+  <li>Move on; each rest scans the new view. Tap the airplane again to land.</li>
+</ol>
+<p>The line says every step: <code>scanning 14/25 · 9 sheets read · found 1</code>, <code>this view scanned · move on</code>, or <code>zoom to 16 or closer</code>. Everything read is kept, so flying over the same place again asks nothing. The words match the same way as keywords.</p>
+
+<h2 id="services">11. Services and their lights</h2>
+<table>
+  <tr><th>Light</th><th>Service</th><th>What it gives</th><th>When it is down</th></tr>
+  <tr><td><code>WMS</code></td><td>ARKOD map (DGU, api.uredjenazemlja.hr)</td><td>the parcel lines; which parcel is under a tap</td><td>no new lines; a tap cannot say the parcel; kept tiles, Moje čestice and caches still work</td></tr>
+  <tr><td><code>WFS</code></td><td>outlines (DGU, api.uredjenazemlja.hr)</td><td>exact parcel outlines</td><td>a found parcel opens without its outline; no new caches; kept outlines still show</td></tr>
+  <tr><td><code>KAT</code></td><td>cadastre (DGU, oss.uredjenazemlja.hr)</td><td>posjedovni list, number search</td><td>only sheets already kept open</td></tr>
+  <tr><td><code>ZK</code></td><td>land registry (DGU, oss.uredjenazemlja.hr)</td><td>vlasnički list</td><td>only owner sheets already kept open</td></tr>
+  <tr><td><code>OSM</code></td><td>OpenStreetMap</td><td>the default map</td><td>only tiles already seen; use OFF</td></tr>
+  <tr><td><code>GOO</code></td><td>Google, with your key</td><td>Google's map and place search</td><td>OSM and OFF still work</td></tr>
+</table>
+<p>Every request the app makes sets its light. Every minute, a service not heard from for three minutes is asked one small question (about parcel 1358/3 in Kukljica). Google is never asked on its own, because every request to Google is on your key.</p>
+<p>When a service <b>goes down or comes back</b>, the map says so at once, e.g. <code>16:31 WFS offline · ORA-01000: maximum open cursors exceeded</code>, and it is kept in <b>Settings → Services → Service log</b> with the time. After a few days the log shows at which hours each service fails. <b>Check now</b> asks them all.</p>
+
+<h2 id="maps">12. The three maps and Google</h2>
+<ul>
+  <li><code>OSM</code> OpenStreetMap: the default, free.</li>
+  <li><code>OFF</code> offline: <span class="tag">Android</span> the whole of Croatia on the phone (a 176 MB download, offered in the middle of the screen the first time; four styles in the settings). <span class="tag">web</span> the map tiles already seen, from the device.</li>
+  <li><code>GOO</code> Google's map, with <b>your own</b> Google key (the app has none built in). The first time, the app shows the steps to make one in Google Cloud Console (a project, billing on, "Map Tiles API" and optionally "Places API (New)", a key restricted to the app). Paste the key or pick the file it is in; it is tested at once and Google's own answer is shown. Road map by default: Google refuses satellite tiles to accounts in the EEA.</li>
+</ul>
+<p>The ARKOD lines are drawn over all three, in an ink that reads on each.</p>
+
+<h2 id="under">13. What happens underneath</h2>
+<ul>
+  <li><b>The parcel lines</b> are the state's WMS pictures (512 pixels a tile, from <code>z14</code>). The app recolours them on the device (colour, transparency, thickness) and keeps them for 60 days.</li>
+  <li><b>A tap</b> asks the WMS which parcel is at that point (GetFeatureInfo, a fifth of a second). The outline at once is traced from the state's own picture round the finger; the exact outline comes from the WFS, which is slow and sometimes down.</li>
+  <li><b>Sheets</b> come from OSS: the cadastre's parcel-info (posjedovni list), the land registry's lr-unit (vlasnički list), the number search.</li>
+  <li><b>The web app</b> asks the state through its own small proxy (arkod-layer.pages.dev/api), because the state's services do not allow a web page to read them directly. Nothing is stored there.</li>
+  <li><b>What is kept, where</b>: tiles, sheets, searches, outlines, Moje čestice, caches, Imenik, keys and the service log are on your device only (<span class="tag">Android</span> the app's storage; <span class="tag">web</span> the browser's storage for this site). Clearing the app's data, or the site's data in the browser, removes them. Export your Moje čestice as files to keep them safe.</li>
+  <li><b>The state's own reasons</b> are shown as they give them. <code>ORA-01000: maximum open cursors exceeded</code> is their Oracle database running out of connections; it lasts until they restart it. Some hours they are slow or down. The app cannot fix that; it works round it by keeping everything, reading ahead while they answer, trying again, and saying what happens.</li>
+</ul>
+
+<h2 id="trouble">14. When something does not work</h2>
+<div class="box">
+<p><b>Look at the lights first.</b> A red light is the state's service (or your signal), and Settings → Services says what cannot be done while it is red.</p>
+<ul>
+  <li><b>No parcel lines</b>: zoom to <code>z14</code> or closer; is ▦ lit? Is <code>WMS</code> red? Lines kept on the device still show.</li>
+  <li><b>A tap says nothing</b>: zoom to <code>z15</code>; <code>WMS</code> red means the state cannot say which parcel it is. Your own and cached parcels still select.</li>
+  <li><b>A sheet does not open</b>: <code>KAT</code> or <code>ZK</code> red. Sheets opened before open from the device, with the date they were read.</li>
+  <li><b>A search finds nothing</b>: add the k.o. (<code>1358/3 kukljica</code>), or move the map over that k.o. once.</li>
+  <li><b>A parcel cache stops</b> with ORA-01000: the app waits and retries; if it gives up, stop and start it again later. What was read is kept.</li>
+  <li><b>It worked in the morning and not in the evening</b>: open the Service log: it shows the hours.</li>
+</ul>
+</div>
+<p class="dim">ARKOD Layer · the cadastre: Državna geodetska uprava (uredjenazemlja.hr) · © OpenStreetMap contributors · Google.</p>
+</main>
+</body>
+</html>

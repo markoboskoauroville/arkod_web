@@ -167,4 +167,6 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
 > mechanisms, and how to use it in both languages, croatian and english, so there should be 2 help files
 
 1. Two help pages, help/en.html and help/hr.html, the same text as the Android app's; Settings → Help and
-   the install page open them. **Status:** in progress.
+   the install page open them. **Status:** done in version 4: 14 sections each, the same text as the
+   Android app v18's; each page links to the other language and back to the map. Every new feature goes
+   into both pages.

@@ -303,6 +303,25 @@ try {
   check(cacheWasOn === 1 && await page.locator('#k-cache.lit').count() === 0, 'the cache key turns caching off (and on again)');
   await page.click('#k-cache');
 
+  // 7c. help, in English and Croatian (version 4)
+  await page.click('#k-settings');
+  await page.waitForSelector('#settings');
+  await page.click('#set-help-en');
+  await page.waitForSelector('h1');
+  const en = { h1: await page.textContent('h1'), sections: await page.locator('h2[id]').count() };
+  check(en.sections === 14 && en.h1.includes('how it works'), `Settings → Help opens the English help: "${en.h1}", ${en.sections} sections`);
+  check(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the help reads at 390 px with no sideways scroll');
+  await shot('21-help-en');
+  await page.click('.lang a[href="hr.html"]');
+  await page.waitForFunction(() => document.documentElement.lang === 'hr');
+  const hr = { h1: await page.textContent('h1'), sections: await page.locator('h2[id]').count() };
+  check(hr.sections === 14 && hr.h1.includes('kako radi'), `and in Croatian: "${hr.h1}", ${hr.sections} sections`);
+  await page.locator('#fly').scrollIntoViewIfNeeded();
+  await shot('22-help-hr-fly');
+  await page.click('a.back');
+  await page.waitForSelector('body[data-ready="1"]');
+  check(true, 'the help leads back to the map');
+
   // 8. the install page shows each phone its own way first
   for (const [ua, first] of [['Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1', 'iphone'],
     ['Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Mobile Safari/537.36', 'android']]) {

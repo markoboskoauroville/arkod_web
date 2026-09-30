@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ARKOD Layer pomoć</title>
+<meta name="theme-color" content="#0B0D10">
+<style>
+  :root { --ground:#0B0D10; --card:#16191D; --raised:#2C323A; --line:#262B31; --sand:#F2DDB4; --text:#E8E4DC; --dim:#9AA0A6; --amber:#E8A64B; --green:#34D399; --red:#EF4444; --magenta:#E040FB; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) 16px 64px; }
+  h1 { font-size: 24px; color: var(--sand); margin: 8px 0 4px; }
+  h2 { font-size: 19px; color: var(--sand); margin: 36px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 16px; color: var(--sand); margin: 20px 0 6px; }
+  p, li { margin: 6px 0; }
+  a { color: var(--sand); }
+  .lang { display: flex; gap: 8px; margin: 8px 0 16px; }
+  .lang a { padding: 6px 12px; border-radius: 10px; border: 1px solid #3a4048; text-decoration: none; }
+  .lang a.on { background: var(--raised); color: #fff; border-color: var(--raised); }
+  .dim { color: var(--dim); font-size: 14px; }
+  .toc { background: var(--card); border-radius: 14px; padding: 12px 16px; columns: 2; column-gap: 24px; font-size: 14px; }
+  .toc a { display: block; padding: 3px 0; text-decoration: none; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0; }
+  td, th { border-top: 1px solid var(--line); padding: 8px 6px; text-align: left; vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; }
+  code, .k { font: 14px ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; color: var(--sand); white-space: nowrap; }
+  .box { background: var(--card); border-radius: 14px; padding: 12px 16px; margin: 12px 0; }
+  .led { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin: 0 3px; }
+  .g { background: var(--green); } .r { background: var(--red); } .y { background: #6B7280; }
+  .tag { font-size: 12px; background: var(--raised); color: #fff; border-radius: 6px; padding: 1px 6px; margin-left: 4px; }
+  @media (max-width: 520px) { .toc { columns: 1; } }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="../" style="display:inline-block;margin:0 0 4px;text-decoration:none">← ARKOD Layer</a><!-- web only -->
+<div class="lang"><a href="en.html">English</a><a class="on" href="hr.html">Hrvatski</a></div>
+<h1>ARKOD Layer: kako radi i kako se koristi</h1>
+<p class="dim">Za Android aplikaciju i web aplikaciju (arkod-layer.pages.dev). Obje rade jednako; gdje se razlikuju, piše <span class="tag">Android</span> ili <span class="tag">web</span>. Postavke su na engleskom (Settings), a sve iz katastra je na hrvatskom, kako ga država piše. Nazivi tipki i postavki navedeni su onako kako ih aplikacija ispisuje.</p>
+
+<nav class="toc">
+  <a href="#what">1. Što je aplikacija</a>
+  <a href="#screen">2. Zaslon</a>
+  <a href="#tap">3. Čestica: dodir, list, kartice</a>
+  <a href="#find">4. Traženje čestice</a>
+  <a href="#mine">5. Moje čestice</a>
+  <a href="#view">6. Parcel view i linije</a>
+  <a href="#caches">7. Spremljena područja (Parcel caches)</a>
+  <a href="#imenik">8. Imenik</a>
+  <a href="#cache">9. Tipka za predmemoriju i ključne riječi</a>
+  <a href="#fly">10. Skeniranje u letu (fly-through)</a>
+  <a href="#services">11. Usluge i njihova svjetla</a>
+  <a href="#maps">12. Tri karte i Google</a>
+  <a href="#under">13. Što se događa u pozadini</a>
+  <a href="#trouble">14. Kad nešto ne radi</a>
+</nav>
+
+<h2 id="what">1. Što je aplikacija</h2>
+<p>ARKOD Layer prikazuje katastarske čestice Republike Hrvatske na karti, bilo gdje u Hrvatskoj. Dodir na česticu kaže njezin broj; drugi dodir otvara njezine listove: <b>posjedovni list</b> (tko je prema katastru posjednik, način uporabe, površina) i <b>vlasnički list</b> iz zemljišne knjige (tko je vlasnik, udjeli, tereti). Svoje čestice možete spremiti, obojiti, poslati kao datoteku, učitati cijelo selo u mobitel za rad bez signala i pustiti aplikaciju da sama traži ime na karti.</p>
+<p>Sve dolazi od Državne geodetske uprave (DGU), iz istih javnih usluga koje koristi portal uredjenazemlja.hr. Ništa što radite ne šalje se nikamo drugamo. Sve što spremite ostaje na vašem uređaju.</p>
+
+<h2 id="screen">2. Zaslon</h2>
+<h3>Na vrhu</h3>
+<ul>
+  <li><b>Redak s koordinatama</b>: gdje je sredina karte (<code>N 44 02.160 E 15 15.180</code>), povećanje (<code>z17</code>) i koja je karta prikazana. <span class="tag">Android</span> i točnost položaja, brzina i visina.</li>
+  <li><b>Svjetla usluga</b>: <span class="led g"></span>zeleno, usluga je odgovorila; <span class="led r"></span>crveno, nije; <span class="led y"></span>sivo, još nije pitana. <code>WMS WFS KAT ZK OSM GOO</code>. Dodir otvara postavke, gdje je svaka objašnjena (<a href="#services">odjeljak 11</a>).</li>
+  <li><b>Googleovo polje</b> (samo s Google ključem) i <b>polje za česticu</b> (<a href="#find">odjeljak 4</a>).</li>
+</ul>
+<h3>Iznad tipki, desno: okrugle tipke</h3>
+<table>
+  <tr><th>Tipka</th><th>Što radi</th></tr>
+  <tr><td>✈ avion</td><td><b>Skeniranje u letu</b>: upišite ime ili riječ, prelazite kartom, i svaka čestica na čijem se listu to spominje bude obrubljena i odabrana (<a href="#fly">odjeljak 10</a>). Ponovni dodir: slijetanje.</td></tr>
+  <tr><td>⛶ cijeli zaslon</td><td>Ostaje samo karta i jedna tipka za povratak. <span class="tag">Android</span> i tipka Natrag vraća. <span class="tag">web</span> tipka je gore desno.</td></tr>
+  <tr><td>((•)) predmemorija</td><td><b>Tipka za predmemoriju (cache)</b>: svijetli dok aplikacija u pozadini čita unaprijed i sprema pročitano (<a href="#cache">odjeljak 9</a>). Dugi pritisak otvara postavke.</td></tr>
+</table>
+<h3>Red tipki na dnu</h3>
+<table>
+  <tr><th>Tipka</th><th>Što radi</th></tr>
+  <tr><td><code>−</code> i <code>+</code></td><td>Smanjuje i povećava. Radi i razvlačenje s dva prsta.</td></tr>
+  <tr><td>◎ gdje sam</td><td>Ide na vaš položaj, s krugom točnosti. <span class="tag">Android</span> dva dodira unutar sekunde: karta vas prati.</td></tr>
+  <tr><td>● snimanje <span class="tag">Android</span></td><td>Snima trag (GPX). Pauza i popis tragova su u postavkama.</td></tr>
+  <tr><td><code>OFF</code> <code>GOO</code> <code>OSM</code></td><td>Tri karte (<a href="#maps">odjeljak 12</a>). Prikazana svijetli.</td></tr>
+  <tr><td>▦ ARKOD</td><td>Dodir: sakrij ili prikaži državne linije čestica (vraća ih i iz "Only Moje čestice"). <b>Dugi pritisak: Parcel view</b> (<a href="#view">odjeljak 6</a>).</td></tr>
+  <tr><td>⚙</td><td>Postavke: što je spremljeno, usluge, Moje čestice, karte, ključevi, pomoć.</td></tr>
+</table>
+<h3>Redci iznad tipki</h3>
+<p>Aplikacija uvijek kaže što radi: "tražim 2449/2 na karti…", "cache · 40 read · 12 kept", "✈ scanning 14/25", "16:31 WFS offline · ORA-01000 …". Ako redak kaže da nešto ne radi, to je državna usluga, a ne vaš mobitel (<a href="#trouble">odjeljak 14</a>).</p>
+
+<h2 id="tap">3. Čestica: dodir, list, kartice</h2>
+<ol>
+  <li>Povećajte na <code>z15</code> ili bliže. <b>Dodirnite česticu</b>: pojavi se njezin broj i tirkizni obrub. Radi i kad je ARKOD sloj sakriven.</li>
+  <li><b>Dodirnite je ponovno</b>: njezin list otvara se preko cijelog zaslona.</li>
+</ol>
+<p>List ima tri kartice:</p>
+<ul>
+  <li><b>uporaba</b>: načini uporabe (maslinik, pašnjak, kuća…) i njihove površine.</li>
+  <li><b>posjedovni</b>: posjedovni list(ovi): posjednici, udjeli i adrese.</li>
+  <li><b>vlasnički</b>: zemljišnoknjižni uložak: vlasnici, udjeli, upisi, tereti. Brojevi čestica navedeni u njemu su <b>poveznice</b>: dodir vodi na tu česticu na karti. Ako katastar ne povezuje uložak, aplikacija jednom pita za zemljišnoknjižni broj čestice ili broj uloška i zapamti ga.</li>
+</ul>
+<p>Na vrhu: <b>filtar</b> (ime, adresa, bilo što; svaka kartica pokazuje koliko redaka odgovara), te <code>CPY</code> (kopira cijeli list kao tekst), <code>TXT</code> (šalje ga kao tekstualnu datoteku), <code>FILE</code> (šalje česticu kao datoteku <code>.arkod.json</code> koju aplikacija otvara na drugom mobitelu). Na dnu, <b>Dodaj u Moje čestice</b> sprema česticu (<a href="#mine">odjeljak 5</a>). List pročitan s uređaja, bez signala, kaže kad je pročitan.</p>
+
+<h2 id="find">4. Traženje čestice</h2>
+<p>Upišite u <b>polje za česticu</b> (tamno polje):</p>
+<table>
+  <tr><th>Upišete</th><th>Pronađe</th></tr>
+  <tr><td><code>2449</code></td><td>Brojeve koji tako počinju, dok tipkate, u k.o. ispod karte.</td></tr>
+  <tr><td><code>1358/3</code> + Traži</td><td>Tu česticu, <b>gdje god bila karta</b>. Traži u Mojim česticama (u svakoj k.o.), u k.o. ispod karte, a ako tamo nema tog broja, u svakoj k.o. koju aplikacija već zna (iz vaših čestica, spremljenih područja, Imenika i mjesta preko kojih je karta prošla). Jedini točan rezultat otvara se odmah: karta ide tamo i list se otvara.</td></tr>
+  <tr><td><code>1358/3 kukljica</code></td><td>Taj broj u k.o. koju navedete (dovoljan je početak imena, i bez č ć š ž đ). Aplikacija mora znati tu k.o.: pomaknite kartu jednom iznad nje.</td></tr>
+  <tr><td><code>pl 1984</code></td><td>Sve čestice tog posjedovnog lista, u k.o. ispod karte.</td></tr>
+  <tr><td><code>jaša anica</code></td><td>Ime: Imenik i spremljena područja (imena s već pročitanih listova).</td></tr>
+</table>
+<p>Svako polje za traženje pamti što ste tražili: dodirnite ga i ponudi povijest.</p>
+
+<h2 id="mine">5. Moje čestice</h2>
+<ul>
+  <li>Na listu uključite <b>Dodaj u Moje čestice</b>; zatim odaberite boju i liniju (puna, isprekidana, točkasta). Crta se na svakoj karti, u toj boji.</li>
+  <li>Postavke → <b>Moje čestice</b>: popis, po <b>grupama</b>. Dodir na ime grupe: njezina boja, linija, debljina, prikaz ili skrivanje. Svaku česticu možete imenovati (olovka) ili ukloniti (kanta, dvaput).</li>
+  <li><b>Izvoz</b> grupe (ikona za dijeljenje): datoteka <code>.arkod.json</code> s česticama, obrisima i izgledom. <b>Uvoz</b>: "Import a file" (ili otvorite datoteku aplikacijom <span class="tag">Android</span>, ispustite je na kartu <span class="tag">web</span> na računalu). Postaje grupa nazvana po datoteci. Ista datoteka radi u obje aplikacije.</li>
+</ul>
+
+<h2 id="view">6. Parcel view i linije</h2>
+<p>Dugi pritisak na ▦ otvara <b>Parcel view</b>:</p>
+<ul>
+  <li><b>ARKOD layer</b>: državne linije uključene ili isključene. <b>Only Moje čestice</b>: sakrij sve ostalo. <b>Parcel search</b>: polje za česticu uključeno ili isključeno.</li>
+  <li><b>Lines</b>: boja državnih linija (automatska ili jedna od šest), prozirnost (20 do 100 %) i debljina (Fine, Normal, Bold). Aplikacija sama iznova crta državnu sliku, na uređaju.</li>
+  <li>Odavde se dolazi i do spremljenih područja (Parcel caches), Mojih čestica i Imenika.</li>
+</ul>
+
+<h2 id="caches">7. Spremljena područja: cijelo mjesto za rad bez signala</h2>
+<p>Parcel view → <b>Cache this view</b>, dajte mu ime. Aplikacija pročita <b>svaku česticu u prikazu</b>: prvo obrise (WFS, po 500), zatim svaki posjedovni list, pa, ako je uključeno "Also vlasnički listovi", svaki vlasnički list jednom. Redak kaže svaku fazu, koliko od koliko, kojom brzinom, koliko je još ostalo i što nije uspjelo; <b>stop</b> čuva ono što je pročitano. Kad državna baza zakaže (ORA-01000), aplikacija čeka i pokušava ponovno, osam puta kroz otprilike pet minuta, i to kaže.</p>
+<p>Unutar spremljenog područja crtaju se njegove vlastite linije (u njegovoj boji, liniji i debljini, s brojevima), dodir bira s uređaja, a polje za česticu i Imenik pronalaze svako ime, broj, list, adresu i uporabu u njemu, bez signala. Postavke → Parcel caches ih nabraja.</p>
+
+<h2 id="imenik">8. Imenik</h2>
+<p>Svaki posjednik i vlasnik sa svakog lista koji je uređaj pročitao ulazi u <b>Imenik</b>. Tražite po imenu (Parcel view → Imenik, ili samo upišite ime u polje za česticu): svako ime pokazuje svoju česticu, a dodir je otvara.</p>
+
+<h2 id="cache">9. Tipka za predmemoriju, ključne riječi i što je spremljeno</h2>
+<p><b>Sve što aplikacija pročita sprema se</b> na uređaj: pločice ARKOD karte, svaki posjedovni i vlasnički list, svako traženje, svaki obris čestice. Spremljeno se koristi kad god usluga ne odgovori, pa se ono što ste jednom vidjeli ponovno otvara i na brdu bez signala.</p>
+<p><b>Tipka za predmemoriju</b> ((•)) dodaje čitanje unaprijed. Dok svijetli:</p>
+<ul>
+  <li>dohvaćaju se ARKOD pločice oko mjesta gdje karta miruje (i oko vas);</li>
+  <li>kad karta miruje na <code>z16</code> ili bliže, pronalaze se čestice na zaslonu (16 točaka) i čitaju njihovi listovi;</li>
+  <li>kad otvorite list, čitaju se ostale čestice njegova vlasničkog lista.</li>
+</ul>
+<p>Redak kaže "cache: reading · 40 read · 12 kept". Isključite je kad je ne želite (npr. na skupoj vezi): ono što sami otvorite i dalje se sprema.</p>
+<p><b>Kriteriji (Cache criteria, keywords)</b>, na vrhu postavki: upišite prezimena, imena ili bilo što, odvojeno zarezima, npr. <code>boško, gobić, maslinik</code>. Tada se list pročitan u pozadini sprema samo ako ime, mjesto ili način uporabe na njemu odgovara nekoj ključnoj riječi; ostali se odbacuju. Prazno: sprema se sve. Riječi ključne riječi moraju biti početak riječi na listu: <code>bosk</code> nalazi BOŠKO, <code>boško ivana</code> nalazi Ivanu Boško, <code>ana</code> ne nalazi IVANA.</p>
+<p><b>Kept on this phone</b>, na vrhu postavki: veličina, koliko listova i obrisa, <b>clear</b> (brisanje, dvaput) i <b>Kept čestice</b>: svaka čestica čiji je list spremljen, po broju s tri riječi (prezime · mjesto · k.o.), s filtrom. Dodir je otvara s uređaja.</p>
+
+<h2 id="fly">10. Skeniranje u letu (fly-through)</h2>
+<ol>
+  <li>Dodirnite <b>avion</b>. Upišite što tražite: ime (<code>jaša</code>), više njih (<code>jaša, boško ivana</code>), mjesto ili način uporabe.</li>
+  <li>Prelazite kartom na <code>z16</code> ili bliže i pustite je da miruje. Svaki put kad miruje, aplikacija pita za čestice ispod 25 točaka na zaslonu i čita posjedovni list svake nove (i njezin vlasnički list ako prvi ništa ne kaže).</li>
+  <li>Svaka čestica koja spominje vaše riječi dobije <b>debeli ljubičasti obrub</b> i bude odabrana; redak kaže <code>found 2449/2 · selecting</code>, a obavijest kaže što je odgovaralo (<code>JAŠA ANICA</code>). Dodir na pronađenu česticu otvara njezin list.</li>
+  <li>Idite dalje; svako mirovanje skenira novi prikaz. Ponovni dodir na avion: slijetanje.</li>
+</ol>
+<p>Redak kaže svaki korak: <code>scanning 14/25 · 9 sheets read · found 1</code>, <code>this view scanned · move on</code> ili <code>zoom to 16 or closer</code>. Sve pročitano se sprema, pa ponovni prelet istog mjesta ništa ne pita. Riječi se uspoređuju jednako kao ključne riječi.</p>
+
+<h2 id="services">11. Usluge i njihova svjetla</h2>
+<table>
+  <tr><th>Svjetlo</th><th>Usluga</th><th>Što daje</th><th>Kad ne radi</th></tr>
+  <tr><td><code>WMS</code></td><td>ARKOD karta (DGU, api.uredjenazemlja.hr)</td><td>linije čestica; koja je čestica ispod dodira</td><td>nema novih linija; dodir ne može reći česticu; spremljene pločice, Moje čestice i spremljena područja i dalje rade</td></tr>
+  <tr><td><code>WFS</code></td><td>obrisi (DGU, api.uredjenazemlja.hr)</td><td>točni obrisi čestica</td><td>pronađena čestica otvara se bez obrisa; nema novih spremljenih područja; spremljeni obrisi i dalje se vide</td></tr>
+  <tr><td><code>KAT</code></td><td>katastar (DGU, oss.uredjenazemlja.hr)</td><td>posjedovni list, traženje brojeva</td><td>otvaraju se samo već spremljeni listovi</td></tr>
+  <tr><td><code>ZK</code></td><td>zemljišna knjiga (DGU, oss.uredjenazemlja.hr)</td><td>vlasnički list</td><td>otvaraju se samo već spremljeni vlasnički listovi</td></tr>
+  <tr><td><code>OSM</code></td><td>OpenStreetMap</td><td>osnovna karta</td><td>samo već viđene pločice; koristite OFF</td></tr>
+  <tr><td><code>GOO</code></td><td>Google, s vašim ključem</td><td>Googleova karta i traženje mjesta</td><td>OSM i OFF i dalje rade</td></tr>
+</table>
+<p>Svaki zahtjev aplikacije postavlja svjetlo svoje usluge. Svake minute, usluga za koju se tri minute ništa nije čulo dobije jedno malo pitanje (o čestici 1358/3 u Kukljici). Google se nikad ne pita sam od sebe, jer je svaki zahtjev Googleu na vašem ključu.</p>
+<p>Kad usluga <b>prestane raditi ili se vrati</b>, karta to odmah kaže, npr. <code>16:31 WFS offline · ORA-01000: maximum open cursors exceeded</code>, i to se čuva u <b>Settings → Services → Service log</b> s vremenom. Nakon nekoliko dana dnevnik pokazuje u koje sate koja usluga ne radi. <b>Check now</b> pita sve.</p>
+
+<h2 id="maps">12. Tri karte i Google</h2>
+<ul>
+  <li><code>OSM</code> OpenStreetMap: osnovna, besplatna.</li>
+  <li><code>OFF</code> izvanmrežna: <span class="tag">Android</span> cijela Hrvatska na mobitelu (preuzimanje od 176 MB, ponuđeno na sredini zaslona prvi put; četiri stila u postavkama). <span class="tag">web</span> već viđene pločice karte, s uređaja.</li>
+  <li><code>GOO</code> Googleova karta, s <b>vašim vlastitim</b> Google ključem (aplikacija nema ugrađen ključ). Prvi put aplikacija pokaže korake za izradu ključa u Google Cloud Consoleu (projekt, uključeno plaćanje, "Map Tiles API" i po želji "Places API (New)", ključ ograničen na aplikaciju). Zalijepite ključ ili odaberite datoteku u kojoj je; odmah se provjeri i prikaže se Googleov odgovor. Cestovna karta je zadana: Google odbija satelitske pločice računima u EGP-u.</li>
+</ul>
+<p>ARKOD linije crtaju se preko sve tri, bojom koja se čita na svakoj.</p>
+
+<h2 id="under">13. Što se događa u pozadini</h2>
+<ul>
+  <li><b>Linije čestica</b> su državne WMS slike (512 piksela po pločici, od <code>z14</code>). Aplikacija ih sama iznova boja na uređaju (boja, prozirnost, debljina) i čuva 60 dana.</li>
+  <li><b>Dodir</b> pita WMS koja je čestica u toj točki (GetFeatureInfo, petinu sekunde). Obris se odmah iscrta iz same državne slike oko prsta; točan obris dolazi od WFS-a, koji je spor i ponekad ne radi.</li>
+  <li><b>Listovi</b> dolaze iz OSS-a: katastarski parcel-info (posjedovni list), zemljišnoknjižni lr-unit (vlasnički list), traženje brojeva.</li>
+  <li><b>Web aplikacija</b> pita državu preko svog malog posrednika (arkod-layer.pages.dev/api), jer državne usluge ne dopuštaju web stranici da ih izravno čita. Tamo se ništa ne sprema.</li>
+  <li><b>Što se sprema i gdje</b>: pločice, listovi, traženja, obrisi, Moje čestice, spremljena područja, Imenik, ključevi i dnevnik usluga su samo na vašem uređaju (<span class="tag">Android</span> spremište aplikacije; <span class="tag">web</span> spremište preglednika za ovu stranicu). Brisanje podataka aplikacije, ili podataka stranice u pregledniku, briše ih. Izvezite Moje čestice kao datoteke da budu sigurne.</li>
+  <li><b>Državni razlozi</b> prikazuju se kako ih država daje. <code>ORA-01000: maximum open cursors exceeded</code> znači da je njihova Oracle baza ostala bez veza; traje dok je ne ponovno pokrenu. U neke sate su spori ili ne rade. Aplikacija to ne može popraviti; zaobilazi to tako da sve sprema, čita unaprijed dok odgovaraju, pokušava ponovno i kaže što se događa.</li>
+</ul>
+
+<h2 id="trouble">14. Kad nešto ne radi</h2>
+<div class="box">
+<p><b>Prvo pogledajte svjetla.</b> Crveno svjetlo je državna usluga (ili vaš signal), a Settings → Services kaže što se ne može dok je crveno.</p>
+<ul>
+  <li><b>Nema linija čestica</b>: povećajte na <code>z14</code> ili bliže; svijetli li ▦? Je li <code>WMS</code> crven? Linije spremljene na uređaju i dalje se vide.</li>
+  <li><b>Dodir ništa ne kaže</b>: povećajte na <code>z15</code>; crveni <code>WMS</code> znači da država ne može reći koja je čestica. Vaše i spremljene čestice i dalje se biraju.</li>
+  <li><b>List se ne otvara</b>: <code>KAT</code> ili <code>ZK</code> je crven. Već otvoreni listovi otvaraju se s uređaja, s datumom kad su pročitani.</li>
+  <li><b>Traženje ništa ne nalazi</b>: dodajte k.o. (<code>1358/3 kukljica</code>) ili jednom pomaknite kartu iznad te k.o.</li>
+  <li><b>Spremanje područja stane</b> zbog ORA-01000: aplikacija čeka i pokušava ponovno; ako odustane, zaustavite ga i pokrenite kasnije. Pročitano ostaje spremljeno.</li>
+  <li><b>Ujutro je radilo, navečer ne</b>: otvorite Service log: pokazuje sate.</li>
+</ul>
+</div>
+<p class="dim">ARKOD Layer · katastar: Državna geodetska uprava (uredjenazemlja.hr) · © OpenStreetMap contributors · Google.</p>
+</main>
+</body>
+</html>

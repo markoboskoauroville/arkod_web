@@ -117,6 +117,14 @@ const wf = await read(join(ROOT, '.github/workflows/deploy.yml'));
 check(/wrangler(@[\d.]+)? pages deploy public --project-name arkod-layer/.test(wf) && /CLOUDFLARE_API_TOKEN/.test(wf) && /CLOUDFLARE_ACCOUNT_ID/.test(wf),
   'deploy.yml: wrangler pages deploy public --project-name arkod-layer, with the two Cloudflare secrets');
 
+// 9b. help, in English and Croatian (version 4)
+for (const f of ['help/en.html', 'help/hr.html']) {
+  const t = await read(join(PUB, f));
+  const sections = (t.match(/<h2 id="/g) ?? []).length;
+  check(sections === 14 && t.includes('href="en.html"') && t.includes('href="hr.html"'), `${f}: ${sections} sections, a link to the other language`);
+}
+check((await read(join(PUB, 'js/faces.js'))).includes("location.href = 'help/hr.html'"), 'Settings open the help in both languages');
+
 // 10. the docs
 for (const f of ['README.md', 'TAKEOVER.md', 'LESSONS.md', 'TESTING.md', 'momentaryupdates.md']) check(await exists(join(ROOT, f)), `${f} is there`);
 

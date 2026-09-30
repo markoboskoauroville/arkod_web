@@ -837,6 +837,10 @@ export async function settings() {
           iconAction('trash', 'delete', async () => { S.keys = S.keys.filter((x) => x !== k); await saveKeys(); buildFields(); render(); }, { danger: true }))),
         h('div.row', {}, paste, iconAction('check', 'add', async () => { await addKeys(paste.value); render(); })),
         action('Key from a file', 'folder', () => $('#key-file').click(), { quiet: true })),
+      // HELP (version 4): the same two pages as the Android app's, English and Croatian.
+      group('Help',
+        opens('Help', 'info', 'how it works and how to use it', () => { location.href = 'help/en.html'; }, { id: 'set-help-en' }),
+        opens('Pomoć', 'info', 'kako radi i kako se koristi', () => { location.href = 'help/hr.html'; }, { id: 'set-help-hr' })),
       group('Install',
         opens('Add ARKOD Layer to the home screen', 'save', 'iPhone, Android', () => { location.href = 'install/'; }, { id: 'set-install' })),
       group('About',

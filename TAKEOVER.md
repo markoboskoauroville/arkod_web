@@ -30,6 +30,10 @@ then `mantra_arkod/FEATURES.md` (the list both apps follow).
 - WFS: slow, and it fails in spells (ORA-01000). The cache job retries 8 times over about five minutes.
 - OSS: parcel-info, lr-unit (folio), suggestions and search. It answers **403** when an Origin header is sent, so the proxy strips it.
 
+## The help
+`public/help/en.html` and `hr.html` are the help for both apps. The Android app copies them into its assets (see
+mantra_arkod/FEATURES.md, "The help pages"). A feature added to either app goes into both pages in the same commit.
+
 ## Open ends
 - Nobody has tested against the real state from the deployed site yet (this sandbox cannot reach it); see TESTING.md.
 - The Croatia offline map file (176 MB, Android's OFF) is not on the web. There, OFF means the tiles already seen.

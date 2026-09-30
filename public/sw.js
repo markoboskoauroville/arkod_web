@@ -5,7 +5,7 @@
 //  - OSS answers (/api/oss GET): the network first, the kept answer when there is none, marked X-Kept-At;
 //  - the WFS, OSS searches (POST) and Google: the network only (Google's terms; searches are live).
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const APP = `arkod-app-${VERSION}`;
 const TILES = 'arkod-tiles';
 const WMS = 'arkod-wms';
@@ -18,7 +18,7 @@ const SHELL = [
   'js/core/parcels.js', 'js/core/style.js', 'js/core/cache.js', 'js/core/markfile.js', 'js/core/ownerbook.js',
   'js/core/finding.js', 'js/core/geo.js', 'js/core/outline.js', 'js/core/query.js', 'js/core/sniff.js', 'js/core/services.js', 'js/scan.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
-  'install/', 'install/index.html',
+  'install/', 'install/index.html', 'help/en.html', 'help/hr.html',
 ];
 const LEAFLET = [
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
