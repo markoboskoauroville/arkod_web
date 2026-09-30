@@ -175,4 +175,15 @@ export function lightCheck() {
   return setInterval(tick, 60_000);
 }
 
+ /** Check now, until it answers (web v5): true as soon as the service answers. */
+export async function checkUntilBack(id, onTry) {
+  for (let i = 0; i < Services.CHECK_WAITS.length; i++) {
+    if (Services.CHECK_WAITS[i]) await new Promise((r) => setTimeout(r, Services.CHECK_WAITS[i]));
+    onTry?.(i + 1);
+    await net.check(id);
+    if (Services.light(Services.health.get(id)) === Services.Light.GREEN) return true;
+  }
+  return false;
+}
+
 export const checkAll = () => Promise.all(Services.SERVICES.filter((s) => s.id !== 'GOOGLE').map((s) => net.check(s.id)));

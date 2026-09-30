@@ -178,4 +178,5 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
 
 1. As the Android app v19: a "Check now" button on each red or grey service in Settings → Services,
    three tries, each said on the row; when a service is back, what waited for it is done at once.
-   **Status:** in progress.
+   **Status:** done in version 5: tested with the fake WFS failing (ORA-01000) and coming back between
+   two tries: the button counts, the light turns green, "missing outlines asked" is said. Help updated.

@@ -166,7 +166,8 @@
   <tr><td><code>GOO</code></td><td>Google, s vašim ključem</td><td>Googleova karta i traženje mjesta</td><td>OSM i OFF i dalje rade</td></tr>
 </table>
 <p>Svaki zahtjev aplikacije postavlja svjetlo svoje usluge. Svake minute, usluga za koju se tri minute ništa nije čulo dobije jedno malo pitanje (o čestici 1358/3 u Kukljici). Google se nikad ne pita sam od sebe, jer je svaki zahtjev Googleu na vašem ključu.</p>
-<p>Kad usluga <b>prestane raditi ili se vrati</b>, karta to odmah kaže, npr. <code>16:31 WFS offline · ORA-01000: maximum open cursors exceeded</code>, i to se čuva u <b>Settings → Services → Service log</b> s vremenom. Nakon nekoliko dana dnevnik pokazuje u koje sate koja usluga ne radi. <b>Check now</b> pita sve.</p>
+<p>Kad usluga <b>prestane raditi ili se vrati</b>, karta to odmah kaže, npr. <code>16:31 WFS offline · ORA-01000: maximum open cursors exceeded</code>, i to se čuva u <b>Settings → Services → Service log</b> s vremenom. Nakon nekoliko dana dnevnik pokazuje u koje sate koja usluga ne radi. <b>Check now</b> na kraju pita sve.</p>
+<p><b>Uz uslugu koja ne radi</b> (crvena, ili siva: još nije pitana) je njezina vlastita tipka <b>Check now</b>. Ponovno pita tu uslugu, do tri puta (odmah, nakon 5 s, nakon 10 s), a tipka kaže svaki pokušaj; svjetlo postane zeleno čim odgovori, ili redak kaže "still offline" s državnim razlogom. Kad se usluga vrati, tom tipkom ili sama, odmah se napravi ono što ju je čekalo: vrati li se <code>WMS</code>, ARKOD sloj se ponovno iscrta; vrati li se <code>WFS</code>, traže se obrisi koji još nedostaju; vrati li se <code>KAT</code> ili <code>ZK</code>, otvoreni list koji se nije mogao pročitati čita se ponovno.</p>
 
 <h2 id="maps">12. Tri karte i Google</h2>
 <ul>
@@ -195,6 +196,7 @@
   <li><b>List se ne otvara</b>: <code>KAT</code> ili <code>ZK</code> je crven. Već otvoreni listovi otvaraju se s uređaja, s datumom kad su pročitani.</li>
   <li><b>Traženje ništa ne nalazi</b>: dodajte k.o. (<code>1358/3 kukljica</code>) ili jednom pomaknite kartu iznad te k.o.</li>
   <li><b>Spremanje područja stane</b> zbog ORA-01000: aplikacija čeka i pokušava ponovno; ako odustane, zaustavite ga i pokrenite kasnije. Pročitano ostaje spremljeno.</li>
+  <li><b>Usluga je crvena</b>: pritisnite njezin <b>Check now</b> u Settings → Services; državna baza se često vrati za nekoliko sekundi.</li>
   <li><b>Ujutro je radilo, navečer ne</b>: otvorite Service log: pokazuje sate.</li>
 </ul>
 </div>

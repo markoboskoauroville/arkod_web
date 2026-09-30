@@ -407,6 +407,12 @@ async function openSheet(parcel) {
   if (S.cacheOn) Sniffer.follow(rec, folios);
 }
 
+/** An open sheet that could not be read, read again (web v5: its service is back). */
+function retrySheet() {
+  if (sheetState && (sheetState.problem || sheetState.folioProblem)) { openSheet(sheetState.parcel); return true; }
+  return false;
+}
+
 /** A kept parcel from the settings' list (v3, Android v13): from the device, sheet and all. */
 async function openKept(muniReg, number) {
   const ref = `${muniReg}-${number}`;
@@ -638,7 +644,7 @@ export function closeFace() {
 }
 
 export {
-  showLayer, applyVisibility, openSheet, goToParcel, goToNumber, openKept, showFound, addToImenik, select, showPin, whereAmI, remember, saveMarks, fillShapes,
+  showLayer, applyVisibility, openSheet, goToParcel, goToNumber, openKept, retrySheet, showFound, addToImenik, select, showPin, whereAmI, remember, saveMarks, fillShapes,
   giveFile, drawMine, inkNow, topLine,
 };
 

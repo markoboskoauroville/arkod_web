@@ -248,11 +248,18 @@ try {
   const said = (await page.textContent('#note')).trim();
   check(said.includes('WFS offline') && said.includes('ORA-01000'), `the WFS failing is said on the map at once: "${said}"`);
   await shot('17-service-down');
-  fail.wfs = false;
-  await page.evaluate(() => import('./js/net.js').then((n) => n.check('WFS')));
-  await page.waitForFunction(() => document.querySelector('#lights [data-service="WFS"]')?.dataset.light === 'GREEN', null, { timeout: 10000 });
+  // Check now (web v5): next to the service that is down, and only there; the state recovers between tries
   await page.click('#lights');
   await page.waitForSelector('#settings');
+  check(await page.locator('#check-WFS').count() === 1 && await page.locator('#check-WMS').count() === 0, 'Check now stands next to the service that is down, and only there');
+  await page.click('#check-WFS');
+  await page.waitForFunction(() => document.querySelector('#check-WFS')?.textContent.includes('try 1'), null, { timeout: 10000 });
+  await shot('17b-check-now-trying');
+  fail.wfs = false;
+  await page.waitForFunction(() => document.querySelector('#checking-WFS')?.textContent === 'back online', null, { timeout: 30000 });
+  const wfsLight = await page.getAttribute('#settings .service[data-service="WFS"]', 'data-light');
+  check(wfsLight === 'GREEN' && await page.locator('#check-WFS').count() === 0, `Check now tries again until it answers: WFS ${wfsLight}, "back online"`);
+  check((await page.textContent('#note')).includes('missing outlines asked'), `and what waited for it is done: "${(await page.textContent('#note')).trim()}"`);
   const firstGroups = await page.$$eval('#settings .group h3', (xs) => xs.slice(0, 3).map((x) => x.textContent));
   check(firstGroups[0] === 'Kept on this phone' && firstGroups[1] === 'Services', `the settings open with what is kept, then the services: ${firstGroups.join(' · ')}`);
   await page.waitForFunction(() => /MB|kB|unknown/.test(document.querySelector('#kept-size')?.textContent ?? ''), null, { timeout: 10000 }).catch(() => {});

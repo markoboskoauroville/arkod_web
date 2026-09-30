@@ -6,13 +6,13 @@ import {
   S, say, showLayer, applyVisibility, openSheet, goToParcel, select, showPin, whereAmI, remember, saveMarks, fillShapes,
   giveFile, drawMine, topLine, showFace, closeFace, loadState, bestKey, saveKeys, buildMap,
   fold, distanceLabel, results, searchBox, nameBox, face, group, opens, pick, toggle, choice, action, iconAction, h, db, net, P, Style, Cache, MarkFile, OwnerBook,
-  openKept, showFound, addToImenik,
+  openKept, showFound, addToImenik, retrySheet,
 } from './app.js';
 import { icon } from './icons.js';
 import * as Q from './core/query.js';
 import * as Sn from './core/sniff.js';
 import * as Services from './core/services.js';
-import { Sniffer, Flyer, lightCheck, checkAll } from './scan.js';
+import { Sniffer, Flyer, lightCheck, checkAll, checkUntilBack } from './scan.js';
 
 const $ = (sel) => document.querySelector(sel);
 const RELEASES = 'https://github.com/markoboskoauroville/arkod_web/releases/latest';
@@ -104,6 +104,12 @@ function wireBackground() {
     if (!e) return;
     db.set('serviceLog', Services.log).catch(() => {});
     say(Services.eventLine(e, hhmm));
+    // MAKE IT WORK (web v5): a service back, what waited for it is done at once.
+    if (e.online) {
+      if (e.service === 'WMS') { applyVisibility(); say(`${hhmm(e.at)} WMS back online · the ARKOD layer is drawn again`); }
+      if (e.service === 'WFS') { say(`${hhmm(e.at)} WFS back online · missing outlines asked`); fillShapes(); }
+      if ((e.service === 'OSS' || e.service === 'ZK') && retrySheet()) say(`${hhmm(e.at)} ${Services.shortOf(e.service)} back online · the sheet is read again`);
+    }
     if (document.querySelector('#settings')) settings.refresh?.();
   });
   drawLights();
@@ -758,6 +764,7 @@ export async function settings() {
   let keptList = null;
   let keptFilter = '';
   let logOpen = false;
+  const checking = {};
   const render = () => {
     const views = [['roadmap', 'map'], ['satellite', 'satellite'], ['terrain', 'terrain'], ['hybrid', 'hybrid']];
     const paste = h('input.field', { type: 'password', placeholder: 'paste a key (AIza…)', autocomplete: 'off' });
@@ -812,7 +819,16 @@ export async function settings() {
               h('span.title', {}, `${sv.short} · ${sv.title}`),
               h('span.under' + (l === 'RED' ? '.red' : ''), {}, sv.id === 'GOOGLE' && l === 'GREY' ? 'not asked yet (never checked on its own: every request is on your key)' : Services.said(hh, now, hhmm)),
               h('span.under', {}, sv.does),
-              l === 'RED' ? h('span.under.sand', {}, `While it is down: ${sv.whenDown}`) : null));
+              l === 'RED' ? h('span.under.sand', {}, `While it is down: ${sv.whenDown}`) : null,
+              checking[sv.id] && !checking[sv.id].startsWith('checking') ? h('span.under.checking' + (checking[sv.id] === 'back online' ? '.back' : ''), { id: `checking-${sv.id}` }, checking[sv.id]) : null,
+              // CHECK NOW, NEXT TO A SERVICE THAT IS DOWN (web v5): three tries, green the moment it answers.
+              l !== 'GREEN' && sv.id !== 'GOOGLE' ? action(checking[sv.id]?.startsWith('checking') ? checking[sv.id] : 'Check now', 'play', async () => {
+                if (checking[sv.id]?.startsWith('checking')) return;
+                const back = await checkUntilBack(sv.id, (i) => { checking[sv.id] = Services.tryLine(i, Services.CHECK_WAITS.length); render(); });
+                checking[sv.id] = Services.checkedLine(back, Services.health.get(sv.id));
+                render();
+              }, { quiet: true, id: `check-${sv.id}` }) : null,
+              l === 'RED' && sv.id === 'GOOGLE' ? h('span.under', {}, 'Google is asked again when you open the GOO map (every request is on your key).') : null));
         }),
         action('Check now', 'play', async () => { await checkAll(); render(); }, { quiet: true, id: 'check-now' }),
         opens('Service log', 'text', Services.log.length ? `${Services.log.length} changes` : 'nothing yet', () => { logOpen = !logOpen; render(); }, { id: 'log-open' }),

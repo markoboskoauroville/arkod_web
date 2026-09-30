@@ -155,6 +155,13 @@ test('a service going down and coming back is logged once each, with its reason'
   assert.equal(Sv.log.length, 2);
 });
 
+test('Check now tries three times and says how it went', () => {
+  assert.deepEqual(Sv.CHECK_WAITS, [0, 5000, 10000]);
+  assert.equal(Sv.tryLine(2, 3), 'checking… try 2 of 3');
+  assert.equal(Sv.checkedLine(true, null), 'back online');
+  assert.equal(Sv.checkedLine(false, { failAt: 5, reason: 'ORA-01000' }), 'still offline · ORA-01000');
+});
+
 test('fly-through says what on the sheet fitted, and nothing without words', () => {
   const s = { ...sheet1225, sheets: [{ number: '1984', owners: [{ name: 'JAŠA ANICA', share: '1/2' }, { name: 'BOŠKO DENIS', share: '1/2' }] }], address: 'DRAGE' };
   assert.equal(Sn.why(s, [], Sn.criteria('jaša')), 'JAŠA ANICA');

@@ -5,7 +5,7 @@
 |---|---|
 | `npm test` | 85 unit tests: the Android CoreTest cases ported, plus the canvas restyle, the cache status line, a file made on Android opening here, and the proxies |
 | `npm run verify` | files referenced exist, icons and sizes, every import/export, the service worker list, the proxies, the install page, no keys, the workflow, the docs |
-| `npm run e2e` | Chromium at 390 x 844 against `tests/fake-state.mjs`: 56 checks, screenshots in `tests/screens/` |
+| `npm run e2e` | Chromium at 390 x 844 against `tests/fake-state.mjs`: 59 checks, screenshots in `tests/screens/` |
 
 The browser test walks the app step by step:
 1. Kukljica (44.036, 15.253) at z17 with the layer drawn. Full screen shows only the map and its key, and the same key comes back. A tap selects 2449/2 and traces its outline.

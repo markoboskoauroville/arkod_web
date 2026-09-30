@@ -166,7 +166,8 @@
   <tr><td><code>GOO</code></td><td>Google, with your key</td><td>Google's map and place search</td><td>OSM and OFF still work</td></tr>
 </table>
 <p>Every request the app makes sets its light. Every minute, a service not heard from for three minutes is asked one small question (about parcel 1358/3 in Kukljica). Google is never asked on its own, because every request to Google is on your key.</p>
-<p>When a service <b>goes down or comes back</b>, the map says so at once, e.g. <code>16:31 WFS offline · ORA-01000: maximum open cursors exceeded</code>, and it is kept in <b>Settings → Services → Service log</b> with the time. After a few days the log shows at which hours each service fails. <b>Check now</b> asks them all.</p>
+<p>When a service <b>goes down or comes back</b>, the map says so at once, e.g. <code>16:31 WFS offline · ORA-01000: maximum open cursors exceeded</code>, and it is kept in <b>Settings → Services → Service log</b> with the time. After a few days the log shows at which hours each service fails. <b>Check now</b> at the end asks them all.</p>
+<p><b>Next to a service that is down</b> (red, or grey: not asked yet) there is its own <b>Check now</b> button. It asks that service again, up to three times (at once, after 5 s, after 10 s), the button saying each try; the light turns green the moment it answers, or the row says "still offline" with the state's reason. When a service comes back, by this button or by itself, what was waiting for it is done at once: <code>WMS</code> back, the ARKOD layer is drawn again; <code>WFS</code> back, the outlines still missing are asked; <code>KAT</code> or <code>ZK</code> back, an open sheet that could not be read is read again.</p>
 
 <h2 id="maps">12. The three maps and Google</h2>
 <ul>
@@ -195,6 +196,7 @@
   <li><b>A sheet does not open</b>: <code>KAT</code> or <code>ZK</code> red. Sheets opened before open from the device, with the date they were read.</li>
   <li><b>A search finds nothing</b>: add the k.o. (<code>1358/3 kukljica</code>), or move the map over that k.o. once.</li>
   <li><b>A parcel cache stops</b> with ORA-01000: the app waits and retries; if it gives up, stop and start it again later. What was read is kept.</li>
+  <li><b>A service is red</b>: press its <b>Check now</b> in Settings → Services; the state's database often comes back within seconds.</li>
   <li><b>It worked in the morning and not in the evening</b>: open the Service log: it shows the hours.</li>
 </ul>
 </div>

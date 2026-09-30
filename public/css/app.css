@@ -227,3 +227,5 @@ pre.fatal { position: fixed; left: 12px; right: 12px; top: 40%; z-index: 3000; b
 textarea.field { resize: vertical; margin: 6px 0; font: inherit; }
 path.found { filter: drop-shadow(0 0 3px rgba(224,64,251,.8)); }
 
+.under.checking { color: #ffd28a; }
+.under.checking.back { color: #34D399; }

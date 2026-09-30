@@ -52,6 +52,11 @@ export function said(h, now, clock) {
   }
 }
 
+/** CHECK NOW, ONE SERVICE (web v5, Android v19): three tries, 5 s and 10 s apart. */
+export const CHECK_WAITS = [0, 5000, 10000];
+export const tryLine = (attempt, of) => `checking… try ${attempt} of ${of}`;
+export const checkedLine = (back, h) => (back ? 'back online' : 'still offline' + (h?.reason ? ` · ${h.reason}` : ''));
+
 export const due = (h, now, everyMs) => !h || now - Math.max(h.okAt, h.failAt) >= everyMs;
 
 // --- the state of every service, and the log ------------------------------------------------------
