@@ -117,3 +117,8 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
    size and owners, and "the whole breakdown is on the website". **Status:** written with blanks. The
    findings are on Marko's phone (the caches and Moje čestice he made there); this session has never
    had them and cannot reach the state. Needs either the data from him or a summary screen in the app.
+
+> ivan Bosko sime bosko died my grandparents
+
+2. Ivana and Šime Boško, his grandparents, have died: the message says so ("pokojna baka Ivana",
+   "pokojni djed Šime") and counts the parcels still on their names. **Status:** done in the chat.
