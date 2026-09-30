@@ -29,6 +29,8 @@ export const ICONS = {
   text: 'M6 3h8l4 4v14H6z M14 3v4h4 M9 12h6 M9 16h6',
   trash: 'M4 7h16 M9 7V4h6v3 M6 7l1 13h10l1-13',
   share: 'M12 15V4 M7 9l5-5 5 5 M5 14v6h14v-6',
+  fullscreen: 'M4 9V4h5 M15 4h5v5 M20 15v5h-5 M9 20H4v-5',
+  fullscreen_exit: 'M9 4v5H4 M20 9h-5V4 M15 20v-5h5 M4 15h5v5',
   locate: 'M12 5a7 7 0 1 0 0 14a7 7 0 1 0 0-14z M12 10a2 2 0 1 0 0 4a2 2 0 1 0 0-4z M12 2v3 M12 19v3 M2 12h3 M19 12h3',
 };
 

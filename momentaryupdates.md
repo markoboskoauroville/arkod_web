@@ -100,4 +100,8 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
 
 1. No more budget lines in the reports. **Status:** done.
 2. A full-screen key on the map. In full screen, only the map and that one key are visible (no fields,
-   no key row, no top line); the key takes it out again. **Status:** in progress.
+   no key row, no top line); the key takes it out again. **Status:** done in v2. The key is at the top
+   right. Where the browser allows it (Android Chrome, computers, iPad), the browser's own bars go too;
+   an iPhone has no such way for a page, but the home-screen app has no bars anyway. The small map
+   credit (© OpenStreetMap) stays, faint: OpenStreetMap's terms require it. FEATURES.md row 27; opened
+   for Android.

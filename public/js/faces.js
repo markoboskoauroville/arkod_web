@@ -21,6 +21,7 @@ export async function boot() {
   buildMap();
   buildFields();
   wireImport();
+  wireFullScreen();
   if (S.marks.some((m) => !m.rings.length)) fillShapes();
   if ('serviceWorker' in navigator && !new URLSearchParams(location.search).has('nosw')) {
     navigator.serviceWorker.register('sw.js').catch(() => { /* the app works without it, only not offline */ });
@@ -29,6 +30,42 @@ export async function boot() {
   if (open === 'mine') mojeCestice();
   if (open === 'settings') settings();
   document.body.dataset.ready = '1';
+}
+
+// --- full screen (web v2) ------------------------------------------------------------------------
+
+/**
+ * FULL SCREEN: the map alone, with one key to come back (Marko, 30.9.2026). The page's own controls
+ * are hidden whatever the browser allows; where the browser has the Fullscreen API (Android Chrome,
+ * desktops, iPad) its bars go too. An iPhone has no such API for a page: there the home-screen app
+ * has no bars already, and full screen hides the rest.
+ */
+export function setFullScreen(on) {
+  document.body.classList.toggle('full', on);
+  const b = $('#k-full');
+  b.innerHTML = icon(on ? 'fullscreen_exit' : 'fullscreen', 24);
+  b.setAttribute('aria-label', on ? 'Leave full screen' : 'Full screen');
+  b.title = b.getAttribute('aria-label');
+  b.setAttribute('aria-pressed', String(on));
+  const el = document.documentElement;
+  const request = el.requestFullscreen ?? el.webkitRequestFullscreen;
+  const inBrowserFull = document.fullscreenElement ?? document.webkitFullscreenElement;
+  try {
+    if (on && request && !inBrowserFull) Promise.resolve(request.call(el)).catch(() => { /* the page's own full screen is enough */ });
+    if (!on && inBrowserFull) Promise.resolve((document.exitFullscreen ?? document.webkitExitFullscreen).call(document)).catch(() => {});
+  } catch { /* the page's own full screen is enough */ }
+  setTimeout(() => S.map.invalidateSize(), 200);
+}
+
+function wireFullScreen() {
+  $('#k-full').addEventListener('click', () => setFullScreen(!document.body.classList.contains('full')));
+  // Esc or the system's back gesture leaves the browser's full screen: leave the page's too.
+  for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) {
+    document.addEventListener(ev, () => {
+      if (!(document.fullscreenElement ?? document.webkitFullscreenElement) && document.body.classList.contains('full')) setFullScreen(false);
+    });
+  }
+  setFullScreen(false);
 }
 
 // --- the key row ---------------------------------------------------------------------------------

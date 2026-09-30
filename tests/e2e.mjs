@@ -94,6 +94,19 @@ try {
   check((await page.textContent('#top')).includes('N 44'), `the top line shows where the middle is: "${(await page.textContent('#top')).trim()}"`);
   await shot('01-map-kukljica-z17');
 
+  // 1b. full screen: the map and its one key, nothing else; the same key comes back (web v2)
+  await page.click('#k-full');
+  await page.waitForFunction(() => document.body.classList.contains('full'));
+  const shown = await page.evaluate(() => [...document.querySelectorAll('button, input, #top, #note, #status')]
+    .filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; })
+    .map((e) => e.id || e.className));
+  check(shown.length === 1 && shown[0] === 'k-full', `full screen shows only the map and one key (${shown.join(', ')})`);
+  check((await page.getAttribute('#k-full', 'aria-label')) === 'Leave full screen', 'in full screen the key says "Leave full screen"');
+  await shot('01b-full-screen');
+  await page.click('#k-full');
+  await page.waitForFunction(() => !document.body.classList.contains('full'));
+  check(await page.locator('#keys').isVisible() && await page.locator('#parcel-field').isVisible(), 'the same key leaves full screen: the key row and the fields are back');
+
   // 2. a tap selects the parcel under the finger
   await page.touchscreen.tap(mid.x, mid.y);
   await page.waitForFunction(() => document.querySelector('#note')?.textContent.includes('2449/2'), null, { timeout: 10000 });
@@ -144,7 +157,8 @@ try {
   await page.click('#k-settings');
   await page.waitForSelector('#settings');
   const version = (await page.textContent('#set-version')).trim();
-  check(/ARKOD Layer · version 1/.test(version), `Settings show "${version.split('katastar')[0].trim()}"`);
+  const N = JSON.parse(await readFile(join(ROOT, 'version.json'), 'utf8')).version;
+  check(version.includes(`ARKOD Layer · version ${N}`), `Settings show "${version.split('katastar')[0].trim()}"`);
   check(await page.locator('#set-install').count() === 1, 'Settings link to the install page');
   await shot('07-settings');
   await page.click('#set-mine');

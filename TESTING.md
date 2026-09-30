@@ -5,10 +5,10 @@
 |---|---|
 | `npm test` | 85 unit tests: the Android CoreTest cases ported, plus the canvas restyle, the cache status line, a file made on Android opening here, and the proxies |
 | `npm run verify` | files referenced exist, icons and sizes, every import/export, the service worker list, the proxies, the install page, no keys, the workflow, the docs |
-| `npm run e2e` | Chromium at 390 x 844 against `tests/fake-state.mjs`: 36 checks, screenshots in `tests/screens/` |
+| `npm run e2e` | Chromium at 390 x 844 against `tests/fake-state.mjs`: 39 checks, screenshots in `tests/screens/` |
 
 The browser test walks the app step by step:
-1. Kukljica (44.036, 15.253) at z17 with the layer drawn. A tap selects 2449/2 and traces its outline.
+1. Kukljica (44.036, 15.253) at z17 with the layer drawn. Full screen shows only the map and its key, and the same key comes back. A tap selects 2449/2 and traces its outline.
 2. A second tap opens the sheet. Its three tabs (uporaba, posjedovni, vlasnički) are checked, then the filter, a folio link, and "Dodaj u Moje čestice".
 3. Settings, then an import of `tests/fixtures/Obitelj.arkod.json`, then the group restyled (colour, solid, bold) and checked in IndexedDB and on the map.
 4. The parcel field.
@@ -34,7 +34,8 @@ The browser test walks the app step by step:
     Search a name in the parcel field: the cache answers.
 11. Settings → Moje čestice → export a group (share icon) → Save to Files. Then Import a file, and pick it:
     the group comes back. (A web app on the iPhone cannot be chosen from "Open with", so import is done inside the app.)
-12. GOO: follow the key help, paste your key (or pick the file it is in). The road map appears.
+12. The full-screen key (top right): only the map is left, with that key; tap it again to come back.
+13. GOO: follow the key help, paste your key (or pick the file it is in). The road map appears.
 
 ### Android, Chrome
 1. Open https://arkod-layer.pages.dev/install/. Android comes first, with the APK link and "Install app".
