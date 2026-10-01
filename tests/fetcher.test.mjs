@@ -77,7 +77,8 @@ test('wanted, refused while the state is down, fetched when it answers, then ser
   assert.equal(r.status, 404);
 
   // the state is down: asked, the reason written once, not again within the hour
-  let t = Date.parse('2026-10-01T08:00:00Z');
+  // the clock starts now: /want stamps the real time, so a fixed date would fall behind it (it did, 1.10.2026 11:02)
+  let t = Date.now();
   const clock = () => new Date(t);
   await sweep(w.env, w.fetcher, clock);
   const commitsAfterFirst = w.commits.length;
