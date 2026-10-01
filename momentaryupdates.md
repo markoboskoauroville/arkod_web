@@ -180,3 +180,12 @@ The Android app is `markoboskoauroville/mantra_arkod`; its `FEATURES.md` is the 
    three tries, each said on the row; when a service is back, what waited for it is done at once.
    **Status:** done in version 5: tested with the fake WFS failing (ORA-01000) and coming back between
    two tries: the button counts, the light turns green, "missing outlines asked" is said. Help updated.
+
+## 1.10.2026, tested against the real state
+
+From Marko's request of 1.10.2026 (word for word in full in mantra_arkod/momentaryupdates.md), the part
+for this repository:
+
+> 3. Test both apps against the REAL state services, now that they are reachable: Kukljica (k.o. 334723), parcel 1358/3 (id 6436001) and 2449/2. Read 1358/3's land-registry history (folio 250 with historicalOverview=true) and give me everything about it in one code box.
+
+1. The web app against the real WMS, WFS, OSS and land registry: Kukljica, 1358/3, 2449/2. **Status:** pending.
