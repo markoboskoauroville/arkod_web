@@ -19,10 +19,9 @@ async function text(url, init) {
   }
   const t = await r.text();
   if (!r.ok) {
-    // The state refusing this site's address, even after the proxy asked again (1.10.2026).
-    const tries = r.headers.get('X-State-Tries');
-    const why = P.stateReason(t) ?? (r.status === 403 && tries
-      ? `the state refused this site's address (403, asked ${tries} times)` : null);
+    // The state refusing the address this site's proxy leaves from (1.10.2026; functions/_proxy.js).
+    const why = P.stateReason(t) ?? (r.headers.get('X-State-Refused') === 'address'
+      ? "the state refused this site's address (403)" : null);
     // A LIGHT FOR EVERY SERVICE (v3): a 404 is an answer (no such folio), anything else is trouble.
     if (r.status === 404) Services.ok(url); else Services.failed(url, why ?? `answered ${r.status}`);
     throw new Error(why ?? `država je odgovorila ${r.status}`);

@@ -19,10 +19,13 @@
   browsers; answers kept in IndexedDB (`ans:` + URL) give the kept-parcel list, offline sheets and the sniffer's criteria everywhere.
 
 - **The state refuses some of Cloudflare's addresses** (1.10.2026, the first test from the deployed site against the
-  real state). OSS's own Apache answered `403 Forbidden` (an HTML page) to about two requests in three through
-  `/api/oss`, cadastre and land registry alike, while the same request from a desk was always 200. The refusal is by
-  the address the request leaves from, so the proxy asks again on that page (up to six times, `X-State-Tries` says
-  how many). The Android app asks the state from the phone and never meets it.
+  real state, from Cloudflare's IAD). OSS's own Apache answered `403 Forbidden` (an HTML page) to about two calls in
+  three through `/api/oss`, cadastre and land registry alike, while the same request from a desk was always 200. It is
+  **all or nothing per connection**: one kept-alive connection got six 200s, the next six 403s. Retrying inside the
+  proxy never helped (version 6 tried six times: six refusals every time), and a browser keeps one connection, so
+  retrying in the page would not help either. The proxy names it (`X-State-Refused: address`) and the light says so.
+  Whether a phone in Croatia (a European Cloudflare) meets it is not known from here. The Android app asks the state
+  from the phone and never meets it.
 - **`historicalOverview=true` on `lr/lr-unit` changes nothing.** The land registry's history is
   `lr-units/for-ldb-extract?lrUnitId=…&historical=1` (the deleted shares and parcels, with `status` 1), and its
   `fileUrl` under `reports/ldb-extract/` is the official extract, "povijesni prikaz", as a PDF.

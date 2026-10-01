@@ -191,20 +191,8 @@ for this repository:
 1. The web app against the real WMS, WFS, OSS and land registry: Kukljica, 1358/3, 2449/2. **Status:** tests/real-state.mjs
    (`npm run real`) written and run against arkod-layer.pages.dev version 5: the layer, the tap and the second tap
    worked, the sheets did not. Found: the state's OSS refuses some of Cloudflare's addresses (403, about two in three).
-2. Version 6: the proxy asks OSS again when it refuses the address (up to six times), and the light says so when it
-   still refuses. **Status:** written, 104 unit cases, verify, 59 browser checks; the real-state run after the deploy.
-
-## 1.10.2026, help in two parts: usage, and the technology with the story of the offices
-
-> When you do all these tasks, add the help menu item in both application— web application and APK Android application— called QR Code Layer. In that, you need to divide the help in the usage and technology. And on the technology, you need to explain all terms used in this app, especially the servers we are using to get the data. And give background story how all these government offices which keeps track of the parcels, users, etc. are actually working. So you need to give a deep dive for the people who are new to manage their own land and also write their name after their parents or grandparents are deceased.
-
-Read: "QR Code Layer" is ARKOD Layer ("QR" always means ARKOD), the app's own name.
-
-1. Help in both apps, English and Croatian, split in two: Usage (the present 14 sections) and
-   Technology: every term the app uses (k.o., čestica, posjedovni list, vlasnički list, z.k. uložak,
-   list A/B/C, WMS, WFS, OSS, ZIS, ORA-01000 ...), every server the data comes from, and the story
-   of the offices (DGU and its područni uredi, the municipal courts' land-registry departments, the
-   Zajednički informacijski sustav, why the cadastre and the land registry disagree), and a deep dive
-   for someone new: managing their own land, and getting their name written in after parents or
-   grandparents have died (ostavinski postupak, rješenje o nasljeđivanju, uknjižba, the cadastre
-   catching up). A menu item "ARKOD Layer" opens it. **Status:** after tasks 1 to 3.
+2. Version 6: the proxy asked OSS again when it refused the address (up to six times). **Status:** deployed and
+   measured: useless. The refusal is all or nothing per connection (one connection six 200s, the next six 403s).
+3. Version 7: no retrying; the proxy names the refusal and the light says "the state refused this site's address
+   (403)". **Status:** written. What would fix it (asking the state from another address, or a phone in Croatia
+   simply not meeting it) is open: Marko is asked to open a sheet on arkod-layer.pages.dev from his phone.
