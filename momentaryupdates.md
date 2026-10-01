@@ -220,3 +220,26 @@ is ARKOD; "opčina" is the cadastral municipality (k.o.) KUKLJICA, 334723.
    web app's server. **Status:** after 1 and 2; the design is put to Marko.
 4. The question about a Pixel emulator and the monkey: answered in the chat. **Status:** done: not in this
    container (no /dev/kvm, and the emulator needs it); yes on GitHub Actions, whose Linux runners have KVM.
+
+## 1.10.2026, tested against the real state, from Croatia (the local Claude Code on the Mac, LOCAL_TASKS.md §3)
+
+`npm run real` three times against https://arkod-layer.pages.dev (version 7), Chromium 390 x 844, from Marko's
+Mac in Croatia. Cloudflare served every request from Ljubljana (`colo=LJU`, `loc=HR`).
+
+| time | checks passed | what failed |
+|---|---|---|
+| 06:11 | 2 of 4 (stopped) | the first tap: "KAT offline · the state refused this site's address (403)"; the run stopped waiting for the sheet |
+| 06:23 | 1 of 2 (stopped) | the layer never drew in 45 s (0 WMS pictures); OSS 403 |
+| 06:26 | 6 of 11 | the layer (52 WMS pictures), both taps, Ivana no longer an owner, no page errors: ok. Uporaba owners, posjedovni list 1225, vlasnički list (z.k. uložak 250), "2449/2 kukljica", the lights (WMS green; WFS, KAT, ZK red): FAIL. One WMS 524 (Cloudflare's timeout). |
+
+Ten separate connections to `/api/oss/cad/parcel-info?parcelId=6436001`, after each run: **0 of 10, 0 of 10,
+0 of 10 answered 200**; every one was 403, the state's Apache "Forbidden" page.
+
+**The control, the same minute, the same Mac, straight to the state** (`https://oss.uredjenazemlja.hr/oss/public/cad/parcel-info?parcelId=6436001`):
+**10 of 10 answered 200** with 1358/3's record. The Android app on the emulator (the Mac's own address) opened
+1358/3's posjedovni list 1225 from the state at 06:20.
+
+So Croatia is refused too, and it is not the country: the state's OSS refuses Cloudflare's outgoing addresses
+(from the cloud it was two in three; from Ljubljana, today, every one), and answers a Croatian home address
+every time. The fix is to ask the state from another address (or to let the phone ask it itself, as the APK
+does, and use the server only as the fallback). **That choice is Marko's.**
