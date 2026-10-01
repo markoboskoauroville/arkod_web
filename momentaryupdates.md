@@ -251,7 +251,14 @@ does, and use the server only as the fallback). **That choice is Marko's.**
 Read: "ard-layer.pages.dev" is arkod-layer.pages.dev; "It is deployed" is the family site (markoboskopossesions).
 
 1. A background service that keeps asking the state for what a user asked and did not get, and keeps the
-   answer (in ARKOD_cache on GitHub), so the app has it next time. **Status:** in progress.
-2. A button "Fetch when available" where a request failed. **Status:** in progress.
+   answer (in ARKOD_cache on GitHub), so the app has it next time. **Status:** written, version 8:
+   fetcher/worker.js, a Cloudflare Worker "arkod-fetcher" with a schedule every 10 minutes (deployed from the
+   cloud session 1.10.2026 07:50 and by every push), wanted/<id>.json and fetched/<id>.json in ARKOD_cache;
+   the page asks the same code on its own address, /api/later/. 5 unit cases. **Waits for one secret:**
+   GITHUB_TOKEN (a fine-grained token for ARKOD_cache alone, Contents read and write) on the Worker and on the
+   Pages project; until then the server says "GITHUB_TOKEN is not set".
+2. A button "Fetch when available" where a request failed. **Status:** written, version 8: on a sheet that
+   could not be read; the sheet then opens from the server's answer, marked "poslužitelj dohvatio kasnije";
+   Settings → Services → Waiting for the state lists what is waited for. Both help pages. 63 browser checks.
 3. Where it runs: Cloudflare if it can (a Worker with a schedule), else Marko's Oracle machine over SSH.
-   **Status:** in progress.
+   **Status:** Cloudflare can: no Oracle machine needed. (This cloud session cannot reach SSH or workers.dev.)

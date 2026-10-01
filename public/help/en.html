@@ -169,6 +169,7 @@
 <p>When a service <b>goes down or comes back</b>, the map says so at once, e.g. <code>16:31 WFS offline · ORA-01000: maximum open cursors exceeded</code>, and it is kept in <b>Settings → Services → Service log</b> with the time. After a few days the log shows at which hours each service fails. <b>Check now</b> at the end asks them all.</p>
 <p><b>Next to a service that is down</b> (red, or grey: not asked yet) there is its own <b>Check now</b> button. It asks that service again, up to three times (at once, after 5 s, after 10 s), the button saying each try; the light turns green the moment it answers, or the row says "still offline" with the state's reason. When a service comes back, by this button or by itself, what was waiting for it is done at once: <code>WMS</code> back, the ARKOD layer is drawn again; <code>WFS</code> back, the outlines still missing are asked; <code>KAT</code> or <code>ZK</code> back, an open sheet that could not be read is read again.</p>
 
+<p><b>Fetch when available.</b> When a sheet cannot be read (the state does not answer and this device has no copy), the sheet offers <b>Fetch when available</b>. It hands the request to the app's server: a background service on Cloudflare asks the state again every 10 minutes, as long as it takes, and keeps the answer in the private archive ARKOD_cache. Open the parcel again later: the sheet comes from the server's answer, marked "fetched later" with the time, and the same answer reaches every phone and computer that asks for it. <b>Settings → Services → Waiting for the state</b> lists what is still waited for, since when, how many tries, and the state's last reason.</p>
 <h2 id="maps">12. The three maps and Google</h2>
 <ul>
   <li><code>OSM</code> OpenStreetMap: the default, free.</li>
@@ -197,6 +198,7 @@
   <li><b>A search finds nothing</b>: add the k.o. (<code>1358/3 kukljica</code>), or move the map over that k.o. once.</li>
   <li><b>A parcel cache stops</b> with ORA-01000: the app waits and retries; if it gives up, stop and start it again later. What was read is kept.</li>
   <li><b>A service is red</b>: press its <b>Check now</b> in Settings → Services; the state's database often comes back within seconds.</li>
+  <li><b>A sheet will not open</b>: press <b>Fetch when available</b> on it; the server keeps asking and the sheet is there next time.</li>
   <li><b>It worked in the morning and not in the evening</b>: open the Service log: it shows the hours.</li>
 </ul>
 </div>

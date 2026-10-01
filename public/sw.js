@@ -5,7 +5,7 @@
 //  - OSS answers (/api/oss GET): the network first, the kept answer when there is none, marked X-Kept-At;
 //  - the WFS, OSS searches (POST) and Google: the network only (Google's terms; searches are live).
 
-const VERSION = 'v7';
+const VERSION = 'v8';
 const APP = `arkod-app-${VERSION}`;
 const TILES = 'arkod-tiles';
 const WMS = 'arkod-wms';

@@ -39,7 +39,9 @@ function check(ok, what) {
 }
 const asked = { wms: 0, info: 0, wfs: 0, oss: 0, google: 0 };
 // The state failing as it did on 30.9.2026 at 16:20 (web v3: the lights and the log).
-const fail = { wfs: false };
+const fail = { wfs: false, record: null };
+// FETCH WHEN AVAILABLE (version 8): the site's /api/later, as the server would answer
+const later = { wanted: [], fetched: new Map() };
 
 async function wire(context) {
   await context.route('https://cdnjs.cloudflare.com/**', async (route) => {
@@ -61,8 +63,24 @@ async function wire(context) {
       if (fail.wfs) return route.fulfill({ status: 500, contentType: 'text/xml', body: '<ows:ExceptionReport><ows:Exception><ows:ExceptionText>java.sql.SQLException: ORA-01000: maximum open cursors exceeded\n</ows:ExceptionText></ows:Exception></ows:ExceptionReport>' });
       return route.fulfill({ body: Fake.wfs(q), contentType: 'application/json' });
     }
+    if (u.pathname.startsWith('/api/later/')) {
+      const what = u.pathname.slice('/api/later/'.length);
+      if (what === 'want') {
+        const { url } = JSON.parse(route.request().postData() || '{}');
+        if (!later.wanted.includes(url)) later.wanted.push(url);
+        return route.fulfill({ body: JSON.stringify({ id: 'x', state: later.fetched.has(url) ? 'fetched' : 'wanted', tries: 0 }), contentType: 'application/json' });
+      }
+      if (what === 'answer') {
+        const url = q.get('url');
+        return later.fetched.has(url)
+          ? route.fulfill({ body: later.fetched.get(url), contentType: 'application/json', headers: { 'X-Fetched-At': '2026-10-01T09:10:00.000Z', 'Access-Control-Expose-Headers': 'X-Fetched-At' } })
+          : route.fulfill({ status: 404, body: '{"error":"not fetched yet"}', contentType: 'application/json' });
+      }
+      if (what === 'wanted') return route.fulfill({ body: JSON.stringify(later.wanted.map((url) => ({ url, since: '2026-10-01T09:00:00.000Z', tries: 3, last: '2026-10-01T09:20:00.000Z ORA-01000: maximum open cursors exceeded' }))), contentType: 'application/json' });
+    }
     if (u.pathname.startsWith('/api/oss/')) {
       asked.oss += 1;
+      if (fail.record && u.pathname.endsWith('cad/parcel-info') && q.get('parcelId') === fail.record) return route.fulfill({ status: 400, contentType: 'text/plain', body: 'ORA-01000: maximum open cursors exceeded' });
       const body = Fake.oss(u.pathname.slice('/api/oss/'.length), q, route.request().postData());
       return body == null ? route.fulfill({ status: 404, body: 'no' }) : route.fulfill({ body, contentType: 'application/json' });
     }
@@ -305,6 +323,38 @@ try {
   check((await page.textContent('#sheet .num')).includes('2451'), '"2451 kukljica" names the k.o. and opens it');
   await shot('20-found-from-zagreb');
   await page.click('#sheet-close');
+
+  // 7b. FETCH WHEN AVAILABLE (version 8): the cadastre fails, the request goes to the server, the answer comes later
+  const ID = '6456974', STATE_URL = `https://oss.uredjenazemlja.hr/oss/public/cad/parcel-info?parcelId=${ID}`;
+  fail.record = ID;
+  await page.evaluate(async (id) => { const db = await import('/js/db.js'); for (const k of await db.keys('ans:')) if (k.endsWith('parcelId=' + id)) await db.del(k); }, ID);
+  await page.fill('#parcel-field', '2533 kukljica');
+  await page.press('#parcel-field', 'Enter');
+  await page.waitForSelector('#later', { timeout: 15000 });
+  check((await page.textContent('#sheet-rows')).includes('ORA-01000'), 'the cadastre fails: the sheet says so, and offers "Fetch when available"');
+  await page.click('#later');
+  await page.waitForFunction(() => /wanted|already/.test(document.getElementById('later-state')?.textContent ?? ''));
+  check(later.wanted.includes(STATE_URL), `the button hands the state's own address to the server: ${later.wanted.at(-1)}`);
+  await shot('20b-fetch-when-available');
+  await page.click('#sheet-close');
+  // the server fetched it in the background; the state is still down; the sheet opens from the server's answer
+  const Fake2 = await import('./fake-state.mjs');
+  later.fetched.set(STATE_URL, Fake2.oss('cad/parcel-info', new URLSearchParams({ parcelId: ID })));
+  await page.fill('#parcel-field', '2533 kukljica');
+  await page.press('#parcel-field', 'Enter');
+  await page.waitForFunction(() => /dohvatio kasnije/.test(document.getElementById('sheet')?.textContent ?? ''), null, { timeout: 15000 });
+  check((await page.textContent('#sheet .num')).includes('2533'), 'with the state still down, the sheet opens from what the server fetched later, and says so');
+  await shot('20c-from-the-server');
+  await page.click('#sheet-close');
+  fail.record = null;
+  later.fetched.clear();
+  await page.click('#k-settings');
+  await page.waitForSelector('#settings');
+  await page.click('#later-open');
+  await page.waitForFunction(() => /parcelId=6456974/.test(document.getElementById('later-list')?.textContent ?? ''), null, { timeout: 8000 });
+  check(/3 tries/.test(await page.textContent('#later-list')), `Settings → Services → Waiting for the state lists it: "${(await page.textContent('#later-list .logrow')).trim().slice(0, 90)}…"`);
+  await shot('20d-waiting-for-the-state');
+  await page.click('#settings-close');
   // the cache key
   const cacheWasOn = await page.locator('#k-cache.lit').count();
   await page.click('#k-cache');

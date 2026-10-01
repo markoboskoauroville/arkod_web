@@ -383,6 +383,7 @@ async function openSheet(parcel) {
     if (sheetState?.parcel !== parcel) return;
     sheetState.record = rec;
     sheetState.keptAt = r.keptAt;
+    sheetState.remote = r.remote;
   } catch (e) {
     if (sheetState?.parcel !== parcel) return;
     sheetState.problem = `posjednici se nisu mogli pročitati: ${e.message}`;
@@ -405,6 +406,25 @@ async function openSheet(parcel) {
   addToImenik(parcel, rec, folios);
   // THE SNIFFER FOLLOWS (v3, Android v12): the other parcels of this owner sheet.
   if (S.cacheOn) Sniffer.follow(rec, folios);
+}
+
+/**
+ * FETCH WHEN AVAILABLE (version 8): the request the state did not answer, handed to the background service,
+ * which asks again every ten minutes and keeps the answer for everyone. The button says what it did.
+ */
+function laterButton(urls) {
+  const line = h('div.dim', { id: 'later-state' });
+  const b = action('Fetch when available', 'save', async () => {
+    b.disabled = true;
+    line.textContent = 'handing it to the server…';
+    const got = await net.want(urls);
+    const bad = got.find((x) => x.error);
+    if (bad) { line.textContent = `the server could not take it: ${bad.error}`; b.disabled = false; return; }
+    line.textContent = got.every((x) => x.state === 'fetched')
+      ? 'the server already has it: open the parcel again'
+      : 'wanted: the server asks the state every 10 minutes and keeps the answer; open the parcel again later (Settings → Services lists what is waiting)';
+  }, { id: 'later' });
+  return h('div.pad', {}, b, line);
 }
 
 /** An open sheet that could not be read, read again (web v5: its service is back). */
@@ -515,6 +535,7 @@ function renderSheet() {
     body.replaceChildren();
     if (!rec) {
       body.append(h('div.dim', {}, st.problem ?? 'pitam katastar za posjednike…'));
+      if (st.problem) body.append(laterButton([P.recordUrl(p.id, net.API.oss)]));
       return;
     }
     let heading = '';
@@ -567,7 +588,9 @@ function renderSheet() {
     return wrap;
   }
 
-  const kept = st.keptAt ? h('div.amber', {}, `bez signala: prikazan zapis od ${new Date(st.keptAt).toLocaleDateString('hr-HR')}`) : null;
+  const kept = !st.keptAt ? null : st.remote
+    ? h('div.amber', {}, `država nije odgovorila: zapis koji je poslužitelj dohvatio kasnije, ${new Date(st.keptAt).toLocaleString('hr-HR')}`)
+    : h('div.amber', {}, `bez signala: prikazan zapis od ${new Date(st.keptAt).toLocaleDateString('hr-HR')}`);
   const el = h('div.face.sheet', { id: 'sheet', role: 'dialog', 'aria-label': `čestica ${p.number}` },
     h('header.facehead', {}, title, ...tools, iconAction('close', null, closeFace, { title: 'Close', id: 'sheet-close' })),
     h('div.facebody', {},

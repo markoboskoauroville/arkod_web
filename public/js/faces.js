@@ -764,6 +764,7 @@ export async function settings() {
   let keptList = null;
   let keptFilter = '';
   let logOpen = false;
+  let laterOpen = false, laterList = null, laterProblem = null;
   const checking = {};
   const render = () => {
     const views = [['roadmap', 'map'], ['satellite', 'satellite'], ['terrain', 'terrain'], ['hybrid', 'hybrid']];
@@ -832,6 +833,18 @@ export async function settings() {
         }),
         action('Check now', 'play', async () => { await checkAll(); render(); }, { quiet: true, id: 'check-now' }),
         opens('Service log', 'text', Services.log.length ? `${Services.log.length} changes` : 'nothing yet', () => { logOpen = !logOpen; render(); }, { id: 'log-open' }),
+        // FETCH WHEN AVAILABLE (version 8): what the background service is still asking the state for
+        opens('Waiting for the state', 'save', laterList ? `${laterList.length} waiting` : 'fetch when available', async () => {
+          laterOpen = !laterOpen;
+          if (laterOpen) { laterList = null; laterProblem = null; render(); try { laterList = await net.wanted(); } catch (e) { laterProblem = e.message; laterList = []; } }
+          render();
+        }, { id: 'later-open' }),
+        laterOpen ? h('div', { id: 'later-list' },
+          laterProblem ? h('div.under.pad.red', {}, laterProblem) : null,
+          !laterList ? h('div.under.pad', {}, 'asking the server…') : !laterList.length && !laterProblem ? h('div.under.pad', {}, 'nothing is waiting: everything asked for has been fetched') : null,
+          ...(laterList ?? []).map((x) => h('div.logrow', {}, h('i.led.red'),
+            h('span', {}, `${x.url.replace(/^https:\/\/[^/]+/, '').slice(0, 90)} · since ${new Date(x.since).toLocaleString('hr-HR', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })} · ${x.tries} tries${x.last ? ' · ' + x.last.replace(/^\S+ /, '') : ''}`))),
+          h('div.under.pad', {}, 'A request the state did not answer, handed to the server with "Fetch when available": it asks again every 10 minutes and keeps the answer in ARKOD_cache, for every device.')) : null,
         logOpen ? h('div', { id: 'service-log' }, Services.log.slice(0, 100).map((e) => h('div.logrow', {}, h('i.led.' + (e.online ? 'green' : 'red')),
           Services.eventLine(e, (t) => new Date(t).toLocaleString('hr-HR', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }))))) : null,
         h('div.under.pad', {}, 'All four ARKOD services are the State Geodetic Administration\'s (DGU): the map (WMS) and the outlines (WFS) at api.uredjenazemlja.hr, the cadastre and the land registry at oss.uredjenazemlja.hr. ' +

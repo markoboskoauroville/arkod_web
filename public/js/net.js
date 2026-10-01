@@ -43,8 +43,58 @@ async function kept(url, { keep = true } = {}) {
   } catch (e) {
     const old = await db.get('ans:' + url, null).catch(() => null);
     if (old) return { text: old.t, keptAt: new Date(old.at).toISOString() };
+    // FETCH WHEN AVAILABLE (version 8): what the background service fetched for anyone, once the state answered
+    const far = await later(url);
+    if (far) {
+      if (keep) db.set('ans:' + url, { t: far.text, at: Date.parse(far.keptAt) || Date.now() }).catch(() => {});
+      return far;
+    }
     throw e;
   }
+}
+
+// --- FETCH WHEN AVAILABLE (version 8, 1.10.2026) --------------------------------------------------------
+// Marko: "There will be a button ... fetch when available, and this will be a background service running."
+// A request the state did not answer is handed to the site's server (/api/later, fetcher/worker.js); a
+// Cloudflare Worker asks the state again every ten minutes and keeps the answer in ARKOD_cache on GitHub, where
+// this page (and anyone's, on any device) finds it next time.
+const STATE_OF = {
+  '/api/oss/': 'https://oss.uredjenazemlja.hr/oss/public/',
+  '/api/wfs': 'https://api.uredjenazemlja.hr/services/inspire/cp/wfs',
+  '/api/wms': 'https://api.uredjenazemlja.hr/services/inspire/cp_wms/wms',
+};
+/** The state's own address behind one of this site's proxies; null for anything else. */
+export function stateUrl(url) {
+  for (const [mine, theirs] of Object.entries(STATE_OF)) if (url.startsWith(mine)) return theirs + url.slice(mine.length);
+  return null;
+}
+/** The answer the background service fetched later, or null. */
+export async function later(url) {
+  const s = stateUrl(url);
+  if (!s) return null;
+  try {
+    const r = await fetch(`/api/later/answer?url=${encodeURIComponent(s)}`);
+    if (!r.ok) return null;
+    return { text: await r.text(), keptAt: r.headers.get('X-Fetched-At') || new Date().toISOString(), remote: true };
+  } catch { return null; }
+}
+/** Hand addresses to the background service: [{ url, state: 'wanted' | 'fetched', tries } | { url, error }]. */
+export async function want(urls) {
+  return Promise.all(urls.map(async (url) => {
+    const s = stateUrl(url);
+    if (!s) return { url, error: 'not the state' };
+    try {
+      const r = await fetch('/api/later/want', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: s }) });
+      const j = await r.json().catch(() => ({}));
+      return r.ok ? { url, ...j } : { url, error: j.error || `the server answered ${r.status}` };
+    } catch { return { url, error: 'no signal' }; }
+  }));
+}
+/** Everything still waited for: [{ url, since, tries, last }]. */
+export async function wanted() {
+  const r = await fetch('/api/later/wanted');
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `the server answered ${r.status}`);
+  return r.json();
 }
 
 /** For the sniffer: the answer, not kept (it keeps only what fits his keywords). */
@@ -116,8 +166,8 @@ export async function outline(lat, lon) {
 
 /** The possession sheet and what it says; keptAt when it came off the device with no signal. */
 export async function record(parcelId) {
-  const { text: t, keptAt } = await kept(P.recordUrl(parcelId, API.oss));
-  return { record: P.parseRecord(t), keptAt };
+  const { text: t, keptAt, remote } = await kept(P.recordUrl(parcelId, API.oss));
+  return { record: P.parseRecord(t), keptAt, remote: Boolean(remote) };
 }
 
 export async function folio(bookId, unit) {

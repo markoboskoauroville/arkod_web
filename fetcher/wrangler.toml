@@ -1,0 +1,11 @@
+# The scheduled half of "fetch when available": every ten minutes, every wanted address asked again.
+# Deployed by .github/workflows/deploy.yml (wrangler deploy -c fetcher/wrangler.toml). One secret, set once by
+# Marko: GITHUB_TOKEN, a fine-grained token for markoboskoauroville/ARKOD_cache alone, Contents read and write:
+#   npx wrangler@3 secret put GITHUB_TOKEN -c fetcher/wrangler.toml
+name = "arkod-fetcher"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+workers_dev = true
+
+[triggers]
+crons = ["*/10 * * * *"]

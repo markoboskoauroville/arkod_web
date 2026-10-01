@@ -29,3 +29,10 @@
 - **`historicalOverview=true` on `lr/lr-unit` changes nothing.** The land registry's history is
   `lr-units/for-ldb-extract?lrUnitId=…&historical=1` (the deleted shares and parcels, with `status` 1), and its
   `fileUrl` under `reports/ldb-extract/` is the official extract, "povijesni prikaz", as a PDF.
+- **A Worker can run on a schedule; Pages cannot** (1.10.2026). "Fetch when available" is a Worker with a cron
+  trigger (`fetcher/`), and the page talks to the same code on its own address (`functions/api/later/`), because
+  `*.workers.dev` is another origin (and this cloud session cannot reach it at all). The account token here may
+  not touch Workers KV, so the queue and the answers live in ARKOD_cache on GitHub: `wanted/<id>.json`,
+  `fetched/<id>.json`. A refusal is written at most once an hour, the tries counted from the time.
+- **Google ignores `overlay: true` on terrain** (measured on the family site, 1.10.2026): the tiles came back opaque.
+  A white-styled street map multiplied over the photo is the see-through layer that works.
