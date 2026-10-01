@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "verify": "node scripts/verify.mjs",
-    "e2e": "node tests/e2e.mjs"
+    "e2e": "node tests/e2e.mjs",
+    "real": "node tests/real-state.mjs"
   },
   "devDependencies": {
     "leaflet": "^1.9.4",

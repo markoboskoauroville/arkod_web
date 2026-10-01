@@ -1,7 +1,7 @@
 // The proxies: the state is asked as an app asks (no Origin), and the answer comes back with CORS.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { forward, TARGETS, cacheSeconds } from '../functions/_proxy.js';
+import { forward, TARGETS, cacheSeconds, OSS_TRIES, refusedByAddress } from '../functions/_proxy.js';
 import { onRequest as oss, ossPath } from '../functions/api/oss/[[path]].js';
 import { onRequest as wms } from '../functions/api/wms.js';
 
@@ -68,4 +68,54 @@ test('an OPTIONS preflight is answered without asking the state', async () => {
   assert.equal(res.status, 204);
   assert.equal(asked, false);
   assert.ok(typeof wms === 'function');
+});
+
+// 1.10.2026: OSS's Apache refuses some of Cloudflare's addresses with its own 403 page.
+const APACHE_403 = '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">\n<html><head>\n<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\n</body></html>\n';
+
+test('OSS refusing the address is asked again, and the answer that comes is passed on', async () => {
+  const calls = [];
+  const fetcher = async (url, init) => {
+    calls.push(init);
+    return calls.length < 3
+      ? new Response(APACHE_403, { status: 403, headers: { 'Content-Type': 'text/html; charset=iso-8859-1' } })
+      : new Response('{"parcelId":6436001}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+  const res = await forward(new Request('https://x/api/oss/cad/parcel-info?parcelId=6436001'), 'oss', TARGETS.oss + 'cad/parcel-info?parcelId=6436001', fetcher);
+  assert.equal(calls.length, 3);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('X-State-Tries'), '3');
+  assert.equal(await res.text(), '{"parcelId":6436001}');
+});
+
+test('the POSTed search is sent again with its body when OSS refuses the address', async () => {
+  const bodies = [];
+  const fetcher = async (url, init) => {
+    bodies.push(init.body);
+    return bodies.length === 1
+      ? new Response(APACHE_403, { status: 403, headers: { 'Content-Type': 'text/html' } })
+      : new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+  const body = '{"cadMunicipalityId":1354,"parcelNumber":"1358/3"}';
+  const res = await forward(new Request('https://x/api/oss/cad/search-parcels', { method: 'POST', body }), 'oss', TARGETS.oss + 'cad/search-parcels', fetcher);
+  assert.equal(res.status, 200);
+  assert.deepEqual(bodies, [body, body]);
+});
+
+test('the asking stops at OSS_TRIES; a 403 that is not the refusal page, and other services, are not asked again', async () => {
+  let n = 0;
+  const always = async () => { n += 1; return new Response(APACHE_403, { status: 403, headers: { 'Content-Type': 'text/html' } }); };
+  const res = await forward(new Request('https://x/api/oss/cad/parcel-info?parcelId=1'), 'oss', TARGETS.oss + 'cad/parcel-info?parcelId=1', always);
+  assert.equal(n, OSS_TRIES);
+  assert.equal(res.status, 403);
+  assert.equal(res.headers.get('X-State-Tries'), String(OSS_TRIES));
+  n = 0;
+  const json403 = async () => { n += 1; return new Response('{"status":"FORBIDDEN"}', { status: 403, headers: { 'Content-Type': 'application/json' } }); };
+  await forward(new Request('https://x/api/oss/x'), 'oss', TARGETS.oss + 'x', json403);
+  assert.equal(n, 1);
+  n = 0;
+  await forward(new Request('https://x/api/wfs?x'), 'wfs', TARGETS.wfs + '?x', always);
+  assert.equal(n, 1);
+  assert.equal(await refusedByAddress(new Response(APACHE_403, { status: 403, headers: { 'Content-Type': 'text/html' } })), true);
+  assert.equal(await refusedByAddress(new Response('x', { status: 500, headers: { 'Content-Type': 'text/html' } })), false);
 });

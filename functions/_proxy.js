@@ -46,18 +46,42 @@ export async function forward(request, kind, target, fetcher = fetch) {
     init.body = await request.text();
   }
   let answer;
+  let tries = 0;
   try {
-    answer = await fetcher(target, init);
+    // THE STATE REFUSES SOME OF CLOUDFLARE'S ADDRESSES (1.10.2026, measured from the deployed site):
+    // OSS's own Apache answered 403 "Forbidden" to about two requests in three, the cadastre and the
+    // land registry alike, while the same request from a phone or a desk was always 200. The refusal
+    // is by the address the request leaves from, and the next request often leaves from another, so
+    // OSS's 403 page is asked again, up to OSS_TRIES times. A 403 that is not that page is passed on.
+    for (;;) {
+      tries += 1;
+      answer = await fetcher(target, { ...init });
+      if (!(kind === 'oss' && tries < OSS_TRIES && await refusedByAddress(answer))) break;
+    }
   } catch (e) {
     return new Response(`the state's service could not be reached: ${e?.message ?? e}`, {
       status: 502, headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
     });
   }
   const out = new Headers(CORS);
+  out.set('X-State-Tries', String(tries));
+  out.set('Access-Control-Expose-Headers', 'X-State-Tries');
   out.set('Content-Type', answer.headers.get('Content-Type') ?? 'application/octet-stream');
   const keep = request.method === 'GET' ? cacheSeconds(kind, answer.status) : 0;
   out.set('Cache-Control', keep > 0 ? `public, max-age=${keep}` : 'no-store');
   return new Response(answer.body, { status: answer.status, headers: out });
+}
+
+/** How many times one OSS request is sent while the state refuses the address it leaves from. */
+export const OSS_TRIES = 6;
+
+/** OSS's own refusal: a 403 with Apache's HTML page (its JSON errors are never HTML). */
+export async function refusedByAddress(answer) {
+  if (answer.status !== 403) return false;
+  const type = answer.headers.get('Content-Type') ?? '';
+  if (!type.includes('text/html')) return false;
+  const body = await answer.clone().text().catch(() => '');
+  return /<title>403 Forbidden<\/title>/i.test(body);
 }
 
 /** The query string of the request, passed on as it came. */

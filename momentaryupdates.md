@@ -188,7 +188,11 @@ for this repository:
 
 > 3. Test both apps against the REAL state services, now that they are reachable: Kukljica (k.o. 334723), parcel 1358/3 (id 6436001) and 2449/2. Read 1358/3's land-registry history (folio 250 with historicalOverview=true) and give me everything about it in one code box.
 
-1. The web app against the real WMS, WFS, OSS and land registry: Kukljica, 1358/3, 2449/2. **Status:** pending.
+1. The web app against the real WMS, WFS, OSS and land registry: Kukljica, 1358/3, 2449/2. **Status:** tests/real-state.mjs
+   (`npm run real`) written and run against arkod-layer.pages.dev version 5: the layer, the tap and the second tap
+   worked, the sheets did not. Found: the state's OSS refuses some of Cloudflare's addresses (403, about two in three).
+2. Version 6: the proxy asks OSS again when it refuses the address (up to six times), and the light says so when it
+   still refuses. **Status:** written, 104 unit cases, verify, 59 browser checks; the real-state run after the deploy.
 
 ## 1.10.2026, help in two parts: usage, and the technology with the story of the offices
 
