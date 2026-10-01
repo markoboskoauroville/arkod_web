@@ -243,3 +243,15 @@ So Croatia is refused too, and it is not the country: the state's OSS refuses Cl
 (from the cloud it was two in three; from Ljubljana, today, every one), and answers a Croatian home address
 every time. The fix is to ask the state from another address (or to let the phone ask it itself, as the APK
 does, and use the server only as the fallback). **That choice is Marko's.**
+
+## 1.10.2026, "Fetch when available": a background service that asks the state later and keeps the answer
+
+> It is deployed. We need to work on my page which is ard-layer.pages.dev because services are not available all the time. You need to find a way how to actually have some server somewhere to try to fetch it later in the background. Whatever user is requested, it's not available there. There will be a button you need to create, fetch when available, and this will be a background service running. If that cannot be run on Cloudflare, then maybe it can be run on my Oracle virtual machine which I have, and you need to ask Cloud how to access it. We need to find a way to access it using SSH, and then we can work with that machine to be a server for this page so it can fetch data in the background and store it to the GitHub.
+
+Read: "ard-layer.pages.dev" is arkod-layer.pages.dev; "It is deployed" is the family site (markoboskopossesions).
+
+1. A background service that keeps asking the state for what a user asked and did not get, and keeps the
+   answer (in ARKOD_cache on GitHub), so the app has it next time. **Status:** in progress.
+2. A button "Fetch when available" where a request failed. **Status:** in progress.
+3. Where it runs: Cloudflare if it can (a Worker with a schedule), else Marko's Oracle machine over SSH.
+   **Status:** in progress.
