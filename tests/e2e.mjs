@@ -282,6 +282,23 @@ try {
   const gooLight = await page.$eval('#lights [data-service="GOOGLE"]', (x) => x.dataset.light).catch(() => 'not shown');
   check(asked.aerial > aerialBefore && gooLight !== 'RED', `satellite in the EU: the aerial photograph instead (${asked.aerial - aerialBefore} tiles), "${(await page.textContent('#note')).trim().slice(0, 60)}…", the GOO light ${gooLight}`);
   await shot('14b-satellite-eu');
+  // GOO's long press (1.10.2026): Google's four views just above the key row; a choice shows it and closes
+  await page.click('#k-goo', { button: 'right' });
+  await page.waitForSelector('#goo-views');
+  const viewsShown = await page.$$eval('#goo-views button', (bs) => bs.map((b) => b.textContent.trim() + (b.classList.contains('on') ? '*' : '')));
+  const placed = await page.evaluate(() => { const p = document.getElementById('goo-views').getBoundingClientRect(), k = document.getElementById('keys').getBoundingClientRect(); return p.bottom <= k.top && p.left >= 0 && p.right <= innerWidth; });
+  check(viewsShown.join(',') === 'map,satellite*,terrain,hybrid' && placed, `a long press on GOO opens Google's views just above the keys: ${viewsShown.join(' · ')}`);
+  await shot('14c-goo-views');
+  await page.locator('#goo-views button', { hasText: /^terrain$/ }).click();
+  await page.waitForFunction(() => !document.getElementById('goo-views'));
+  const terrainAsked = await page.evaluate(() => localStorage.getItem('arkod.googleView') ?? '');
+  check(await page.locator('#k-goo.up').count() === 1 && terrainAsked.includes('terrain'), `choosing "terrain" shows Google's map, keeps the choice (${terrainAsked}) and closes`);
+  await page.click('#k-goo', { button: 'right' });
+  await page.waitForSelector('#goo-views');
+  await page.waitForTimeout(700); // past the key's own long-press timer
+  await page.mouse.click(200, 650);
+  await page.waitForFunction(() => !document.getElementById('goo-views'), null, { timeout: 5000 });
+  check(true, 'a tap elsewhere closes it without changing anything');
   await page.click('#k-settings');
   await page.waitForSelector('#settings');
   await page.locator('#settings button', { hasText: /^map$/ }).first().click();

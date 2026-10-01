@@ -182,13 +182,46 @@ function key(id, iconName, label, onclick, { word = null, cls = '', onlong = nul
   return b;
 }
 
+/**
+ * GOOGLE'S VIEWS, ON A LONG PRESS OF GOO (1.10.2026). Marko: "Long press on the action bar for Google Maps ...
+ * It needs to open different options for different views for Google Maps. Just that, and then when I choose
+ * the view it just closes." The same four as Settings → Google map; the one in use is marked. A choice shows
+ * Google's map in that view and closes; a tap anywhere else, or Esc, closes it too.
+ */
+export const GOOGLE_VIEWS = [['roadmap', 'map'], ['satellite', 'satellite'], ['terrain', 'terrain'], ['hybrid', 'hybrid']];
+let closeGoogleViews = null;
+function googleViews() {
+  closeGoogleViews?.();
+  const close = () => {
+    panel.remove();
+    document.removeEventListener('pointerdown', outside, true);
+    document.removeEventListener('keydown', esc);
+    if (closeGoogleViews === close) closeGoogleViews = null;
+  };
+  closeGoogleViews = close;
+  const outside = (e) => { if (!panel.contains(e.target) && e.target.closest?.('#k-goo') == null) close(); };
+  const esc = (e) => { if (e.key === 'Escape') close(); };
+  const panel = h('div.gooviews', { id: 'goo-views', role: 'dialog', 'aria-label': 'Google map view' },
+    choice(GOOGLE_VIEWS.map(([, w]) => ({ word: w })), GOOGLE_VIEWS.findIndex(([v]) => v === S.googleView), (i) => {
+      S.googleView = GOOGLE_VIEWS[i][0];
+      db.setPref('googleView', S.googleView);
+      close();
+      showLayer('google');
+    }));
+  const keys = $('#keys')?.getBoundingClientRect();
+  if (keys) panel.style.bottom = `${Math.round(window.innerHeight - keys.top + 8)}px`;
+  $('#app').append(panel);
+  setTimeout(() => { document.addEventListener('pointerdown', outside, true); document.addEventListener('keydown', esc); }, 0);
+}
+
 function buildKeys() {
   const row = $('#keys');
   row.replaceChildren(
     key('k-minus', 'minus', 'Zoom out', () => S.map.zoomOut()),
     key('k-where', 'locate', 'Where am I', whereAmI),
     key('k-off', 'mountain', 'Offline map: tiles already seen', () => showLayer('off'), { word: 'OFF', cls: '.mapkey' }),
-    key('k-goo', 'google', 'Google map', () => showLayer('google'), { word: 'GOO', cls: '.mapkey' }),
+    // GOO: a tap shows Google's map; a long press chooses its view (1.10.2026)
+    key('k-goo', 'google', 'Google map (long press: its view)', () => showLayer('google'), { word: 'GOO', cls: '.mapkey', onlong: googleViews }),
     key('k-osm', 'globe', 'OpenStreetMap', () => showLayer('osm'), { word: 'OSM', cls: '.mapkey' }),
     // THE SHOW/HIDE ARKOD LAYER KEY: a tap hides or shows the state's parcels, and always brings
     // them back from "Only Moje čestice"; a long press opens Parcel view (Android v5).
@@ -767,7 +800,7 @@ export async function settings() {
   let laterOpen = false, laterList = null, laterProblem = null;
   const checking = {};
   const render = () => {
-    const views = [['roadmap', 'map'], ['satellite', 'satellite'], ['terrain', 'terrain'], ['hybrid', 'hybrid']];
+    const views = GOOGLE_VIEWS;
     // Google refuses satellite and hybrid in the EU; the app then shows the aerial photograph (Esri) instead
     const paste = h('input.field', { type: 'password', placeholder: 'paste a key (AIza…)', autocomplete: 'off' });
     const words = h('textarea.field', { id: 'cache-keywords', rows: 2, placeholder: 'surnames, first names, anything: boško, gobić, maslinik' });

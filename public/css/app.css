@@ -229,3 +229,8 @@ path.found { filter: drop-shadow(0 0 3px rgba(224,64,251,.8)); }
 
 .under.checking { color: #ffd28a; }
 .under.checking.back { color: #34D399; }
+
+/* GOO's long press: Google's four views, just above the key row (1.10.2026) */
+.gooviews { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); z-index: 1200;
+  background: var(--card, #16191D); border: 1px solid var(--line); border-radius: 16px; padding: 4px 8px; box-shadow: 0 8px 24px rgba(0,0,0,.5); max-width: calc(100vw - 32px); }
+.gooviews .choice { margin: 4px 0; flex-wrap: nowrap; }
