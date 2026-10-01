@@ -281,4 +281,7 @@ refuses satellite and 3D to accounts in the EEA (its terms since 2025). Nothing 
 
 1. Satellite and hybrid fall back to an aerial photograph (Esri World Imagery) when Google refuses them,
    hybrid with streets and place names over it; the map says so in one line; the GOO light is not turned
-   red by this refusal (it is Google's rule, not an outage). **Status:** in progress.
+   red by this refusal (it is Google's rule, not an outage). **Status:** done in version 9 (and Android v21):
+   satellite shows the aerial photograph, hybrid adds streets and place names (web; Android shows the photograph),
+   one line on the map says why, the GOO light stays green; Settings → Google map explains it; both help pages.
+   64 browser checks (Google answering as it answers this account).

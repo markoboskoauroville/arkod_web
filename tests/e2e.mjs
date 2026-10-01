@@ -37,7 +37,9 @@ function check(ok, what) {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${String(step).padStart(2)} ${what}`);
   if (!ok) failures += 1;
 }
-const asked = { wms: 0, info: 0, wfs: 0, oss: 0, google: 0 };
+const asked = { wms: 0, info: 0, wfs: 0, oss: 0, google: 0, aerial: 0 };
+// Google as it answers this account: 'invalid' (a pasted test key), then 'eea' (good key, no satellite in the EU)
+let googleMode = 'invalid';
 // The state failing as it did on 30.9.2026 at 16:20 (web v3: the lights and the log).
 const fail = { wfs: false, record: null };
 // FETCH WHEN AVAILABLE (version 8): the site's /api/later, as the server would answer
@@ -49,7 +51,21 @@ async function wire(context) {
     route.fulfill({ body: await readFile(join(LEAFLET, name)), contentType: name.endsWith('.css') ? 'text/css' : 'text/javascript', headers: { 'Access-Control-Allow-Origin': '*' } });
   });
   await context.route('https://tile.openstreetmap.org/**', (route) => route.fulfill({ body: Fake.osmTile, contentType: 'image/png', headers: { 'Access-Control-Allow-Origin': '*' } }));
-  await context.route(/googleapis\.com/, (route) => { asked.google += 1; route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: { message: 'API key not valid. Please pass a valid API key.' } }) }); });
+  await context.route(/googleapis\.com/, (route) => {
+    asked.google += 1;
+    const u = route.request().url();
+    if (googleMode === 'eea') {
+      if (u.includes('createSession')) {
+        const body = JSON.parse(route.request().postData() || '{}');
+        return body.mapType === 'satellite'
+          ? route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: { message: 'Your request cannot be served because satellite tiles and 3D tiles are not available for your account and region. Learn more here: https://developers.google.com/maps/comms/eea/map-tiles.' } }) })
+          : route.fulfill({ contentType: 'application/json', body: JSON.stringify({ session: 'S1', expiry: '9999999999' }) });
+      }
+      return route.fulfill({ body: Fake.osmTile, contentType: 'image/png', headers: { 'Access-Control-Allow-Origin': '*' } });
+    }
+    route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: { message: 'API key not valid. Please pass a valid API key.' } }) });
+  });
+  await context.route(/arcgisonline\.com/, (route) => { asked.aerial += 1; route.fulfill({ body: Fake.osmTile, contentType: 'image/png', headers: { 'Access-Control-Allow-Origin': '*' } }); });
   await context.route(`${SITE}/api/**`, async (route) => {
     const u = new URL(route.request().url());
     const q = u.searchParams;
@@ -252,6 +268,24 @@ try {
   await page.click('#google-add');
   await page.waitForFunction(() => document.querySelector('#note')?.textContent.includes('Google'), null, { timeout: 5000 });
   check(asked.google > 0, `a pasted key is tested at once; Google's own words are shown: "${(await page.textContent('#note')).trim()}"`);
+  await page.click('#k-osm');
+  // GOOGLE REFUSES SATELLITE IN THE EU (1.10.2026): satellite shows the aerial photograph; the light is left alone
+  googleMode = 'eea';
+  await page.click('#k-settings');
+  await page.waitForSelector('#settings');
+  await page.locator('#settings button', { hasText: /^satellite$/ }).first().click();
+  await page.click('#settings-close');
+  const aerialBefore = asked.aerial;
+  await page.click('#k-goo');
+  await page.waitForFunction(() => /refuses satellite in the EU/.test(document.querySelector('#note')?.textContent ?? ''), null, { timeout: 8000 });
+  await page.waitForTimeout(1000);
+  const gooLight = await page.$eval('#lights [data-service="GOOGLE"]', (x) => x.dataset.light).catch(() => 'not shown');
+  check(asked.aerial > aerialBefore && gooLight !== 'RED', `satellite in the EU: the aerial photograph instead (${asked.aerial - aerialBefore} tiles), "${(await page.textContent('#note')).trim().slice(0, 60)}…", the GOO light ${gooLight}`);
+  await shot('14b-satellite-eu');
+  await page.click('#k-settings');
+  await page.waitForSelector('#settings');
+  await page.locator('#settings button', { hasText: /^map$/ }).first().click();
+  await page.click('#settings-close');
   await page.click('#k-osm');
 
   // 7b. web v3, level with Android v11 to v16

@@ -291,6 +291,16 @@ export const sleep = (ms, signal) => new Promise((resolve, reject) => {
 const sessions = new Map();
 
 /** A Map Tiles session for a view; kept six hours. Google's own words when it refuses. */
+/** Google's refusal of satellite and 3D tiles to accounts in the European Economic Area. */
+export const eeaRefusal = (said) => /not available for your account and region|satellite tiles and 3D tiles/i.test(String(said ?? ''));
+
+/** The free aerial photograph (Esri World Imagery), and its streets and place names for "hybrid". */
+export const AERIAL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+export const AERIAL_LABELS = [
+  'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+  'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+];
+
 export async function googleSession(view, key) {
   const k = view + '|' + key.slice(-6);
   const c = sessions.get(k);
@@ -308,6 +318,15 @@ export async function googleSession(view, key) {
   if (!r.ok) {
     let said = null;
     try { said = JSON.parse(t).error?.message; } catch { /* not JSON */ }
+    // GOOGLE'S RULE IN THE EU, NOT AN OUTAGE (1.10.2026): satellite and 3D are refused to accounts in the EEA,
+    // while the road map and terrain are served on the same key. The light stays as it is; the caller shows
+    // the aerial photograph instead.
+    if (eeaRefusal(said)) {
+      Services.ok('https://tile.googleapis.com/');
+      const e = new Error(`Google: ${said}`);
+      e.eea = true;
+      throw e;
+    }
     Services.failed('https://tile.googleapis.com/', said ?? `answered ${r.status}`);
     throw new Error(said ? `Google: ${said}` : `Google answered ${r.status}`);
   }

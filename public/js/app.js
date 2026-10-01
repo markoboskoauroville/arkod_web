@@ -53,6 +53,7 @@ export const S = {
 const $ = (sel) => document.querySelector(sel);
 
 let base = null;
+let baseExtras = []; // the streets and names over the aerial photo, when Google refuses hybrid
 let arkod = null;
 let minePane = null;
 let selectionLayer = null;
@@ -192,6 +193,8 @@ async function showLayer(id) {
   document.querySelectorAll('.mapkey').forEach((k) => k.classList.toggle('up', k.dataset.map === id));
   if (base) S.map.removeLayer(base);
   base = null;
+  baseExtras.forEach((l) => S.map.removeLayer(l));
+  baseExtras = [];
   $('#googlehelp')?.remove();
   const credit = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · katastar: DGU';
   if (id === 'osm') {
@@ -206,6 +209,22 @@ async function showLayer(id) {
       base = L.tileLayer(net.googleTileUrl(session, key.value), { maxNativeZoom: 21, maxZoom: 21, attribution: 'Google' });
       key.verdict = 'GOOD'; key.said = '';
     } catch (e) {
+      if (e.eea && (S.googleView === 'satellite' || S.googleView === 'hybrid')) {
+        // GOOGLE REFUSES SATELLITE IN THE EU (1.10.2026): the key is good; the aerial photograph instead, and
+        // for hybrid its streets and place names over it. Said once on the map.
+        const credit = '© Esri, Maxar · katastar: DGU';
+        base = L.tileLayer(net.AERIAL, { crossOrigin: true, maxNativeZoom: 19, maxZoom: 21, attribution: credit });
+        if (S.googleView === 'hybrid') baseExtras = net.AERIAL_LABELS.map((u) => L.tileLayer(u, { crossOrigin: true, maxNativeZoom: 19, maxZoom: 21, zIndex: 2 }));
+        say('Google refuses satellite in the EU (its rule, not an outage): the aerial photograph (Esri) is shown instead');
+        key.verdict = 'GOOD'; key.said = '';
+        saveKeys();
+        base.addTo(S.map);
+        base.bringToBack();
+        baseExtras.forEach((l) => l.addTo(S.map));
+        if (arkod) arkod.redraw();
+        topLine();
+        return;
+      }
       key.verdict = 'REFUSED'; key.said = e.message;
       saveKeys();
       showGoogleHelp(e.message);

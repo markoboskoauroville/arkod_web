@@ -768,6 +768,7 @@ export async function settings() {
   const checking = {};
   const render = () => {
     const views = [['roadmap', 'map'], ['satellite', 'satellite'], ['terrain', 'terrain'], ['hybrid', 'hybrid']];
+    // Google refuses satellite and hybrid in the EU; the app then shows the aerial photograph (Esri) instead
     const paste = h('input.field', { type: 'password', placeholder: 'paste a key (AIza…)', autocomplete: 'off' });
     const words = h('textarea.field', { id: 'cache-keywords', rows: 2, placeholder: 'surnames, first names, anything: boško, gobić, maslinik' });
     words.value = S.cacheKeywords;
@@ -858,7 +859,8 @@ export async function settings() {
       group('Google map',
         h('div.pad', {}, choice(views.map(([, w]) => ({ word: w })), views.findIndex(([v]) => v === S.googleView), (i) => {
           S.googleView = views[i][0]; db.setPref('googleView', S.googleView); if (S.layerId === 'google') showLayer('google'); render();
-        }))),
+        })),
+        h('div.under.pad', {}, 'In the EU Google gives no satellite pictures (its rule since 2025, not an outage): satellite shows the aerial photograph (Esri) instead, and hybrid the same photograph with streets and place names over it. The map and terrain are Google\'s own.')),
       group('API keys',
         ...S.keys.map((k) => h('div.row', {},
           h('span.col', {}, h('span.title', {}, k.label), h('span.under', {}, `${masked(k.value)} · ${k.said || k.verdict.toLowerCase()}`)),
