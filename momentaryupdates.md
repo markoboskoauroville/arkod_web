@@ -198,3 +198,20 @@ for this repository:
    reaches Cloudflare in Ashburn, USA): 6 of 11. The layer (36 real WMS pictures), the tap and the second tap work;
    both sheets and the search were refused by the state, and the sheet now says so in those words. What would fix it (asking the state from another address, or a phone in Croatia
    simply not meeting it) is open: Marko is asked to open a sheet on arkod-layer.pages.dev from his phone.
+
+## 1.10.2026, the remote cache: a private repository ARKOD_cache, Kukljica first; and a question about an emulator
+
+> After you've done this, please create new repository in the GitHub and call it ARKOD_cache. That's the private repository and my both apps can read from there. And this is my private DATA REPOSITORY for the data for all these 3 different access points from the government. And idea is because those, those services are often offline that I give you task which data to sniff and store it there for future use. So if GOVERNMENT points are not accessible, data can be retrieved even if new applications are installed or new users are coming out of the cache data, they can work. So we can call this access point remote cache. And then we need to cache these following sites: VMS, VFS, KAT, ZK. Or as we like to call it, VMS is ArcCode layer, the States Map Service. VFS is Parcel Outlines, the State Feature Service. KAT is Cataster OSS. Posted on the list and search. ZK is land registry. So this data needs to be cached. I will tell you what, what part to cache. Now for first test, take the whole Kukljica opčina area and cache all in this repository.
+> a question: are you able to download android emulator for pixel phone version 7 and run it in your environment and test— stress test the application with monkey and all other tests we have in our repository called mantra manifest and mantra manifest intro
+
+Read: "VMS" is WMS (the ARKOD layer, the state's map service), "VFS" is WFS (parcel outlines, the state's
+feature service), KAT is the cadastre's OSS (posjedovni list and search), ZK the land registry; "ArcCode"
+is ARKOD; "opčina" is the cadastral municipality (k.o.) KUKLJICA, 334723.
+
+1. The private repository markoboskoauroville/ARKOD_cache. **Status:** in progress.
+2. Kukljica cached in it whole: WMS tiles, WFS outlines, KAT records and possession sheets, ZK folios.
+   **Status:** in progress.
+3. The "remote cache" access point: both apps read from it when the state does not answer, also on a new
+   install. A private repository needs a reader that holds a credential, so the apps read it through the
+   web app's server. **Status:** after 1 and 2; the design is put to Marko.
+4. The question about a Pixel emulator and the monkey: answered in the chat. **Status:** in progress.
