@@ -194,5 +194,7 @@ for this repository:
 2. Version 6: the proxy asked OSS again when it refused the address (up to six times). **Status:** deployed and
    measured: useless. The refusal is all or nothing per connection (one connection six 200s, the next six 403s).
 3. Version 7: no retrying; the proxy names the refusal and the light says "the state refused this site's address
-   (403)". **Status:** written. What would fix it (asking the state from another address, or a phone in Croatia
+   (403)". **Status:** live 1.10.2026, CI green. Real-state run on version 7 (twice, from a cloud session that
+   reaches Cloudflare in Ashburn, USA): 6 of 11. The layer (36 real WMS pictures), the tap and the second tap work;
+   both sheets and the search were refused by the state, and the sheet now says so in those words. What would fix it (asking the state from another address, or a phone in Croatia
    simply not meeting it) is open: Marko is asked to open a sheet on arkod-layer.pages.dev from his phone.

@@ -53,8 +53,10 @@ try {
   await page.goto(`${SITE}/?lat=${P1358[0]}&lon=${P1358[1]}&z=18`);
   await page.waitForSelector('body[data-ready="1"]', { timeout: 30000 });
   const version = await (await page.request.get(`${SITE}/version.json`)).json();
-  check(version.version >= 5, `the deployed web app is version ${version.version}`);
+  check(version.version >= 7, `the deployed web app is version ${version.version}`);
   await page.waitForFunction(() => document.querySelectorAll('.leaflet-pane canvas[data-drawn="state"]').length > 0, null, { timeout: 45000 });
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
+  await page.waitForTimeout(1500);
   const ink = await page.evaluate(() => [...document.querySelectorAll('canvas[data-drawn="state"]')].reduce((n, c) => {
     const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
     for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n += 1;
@@ -105,6 +107,8 @@ try {
   // 5. the service lights, as the real state answered
   const lights = await page.$$eval('#lights .light', (xs) => xs.map((x) => `${x.textContent}:${x.dataset.light}`));
   check(lights.some((l) => l === 'WMS:GREEN') && lights.some((l) => l === 'KAT:GREEN') && lights.some((l) => l === 'ZK:GREEN'), `the lights: ${lights.join(' ')}`);
+  const refused = await page.evaluate(() => document.body.textContent.includes("refused this site's address"));
+  if (refused) console.log("      the state refused this site's address on this connection (see LESSONS.md)");
   console.log(`      WFS (outlines only): ${lights.find((l) => l.startsWith('WFS')) ?? 'not shown'}`);
   check(errors.length === 0, `no errors in the page${errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''}`);
 } catch (e) {
