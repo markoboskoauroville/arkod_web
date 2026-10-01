@@ -262,3 +262,9 @@ Read: "ard-layer.pages.dev" is arkod-layer.pages.dev; "It is deployed" is the fa
    Settings → Services → Waiting for the state lists what is waited for. Both help pages. 63 browser checks.
 3. Where it runs: Cloudflare if it can (a Worker with a schedule), else Marko's Oracle machine over SSH.
    **Status:** Cloudflare can: no Oracle machine needed. (This cloud session cannot reach SSH or workers.dev.)
+
+Tested live 1.10.2026 11:24 to 11:31 UTC, after Marko set GITHUB_TOKEN (the Worker and Pages): /api/later says
+ready; two wishes handed over (2449/2's record from OSS, 1358/3's outline from the WFS); the Worker's 11:30 run
+fetched the record on its first try (fetched/9cbfb67ffeb5e74677bd1496.json in ARKOD_cache, served back by
+/api/later/answer with X-Fetched-At 11:31:01) and kept the outline wanted with the state's reason ("ORA-00604 …").
+The CI failure before it was a test whose clock was fixed at 08:00 (fixed: the clock starts at the real time).
