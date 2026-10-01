@@ -268,3 +268,17 @@ ready; two wishes handed over (2449/2's record from OSS, 1358/3's outline from t
 fetched the record on its first try (fetched/9cbfb67ffeb5e74677bd1496.json in ARKOD_cache, served back by
 /api/later/answer with X-Fetched-At 11:31:01) and kept the outline wanted with the state's reason ("ORA-00604 …").
 The CI failure before it was a test whose clock was fixed at 08:00 (fixed: the clock starts at the real time).
+
+## 1.10.2026, Google refuses satellite in the EU: the light is red, what it means and how to solve it
+
+> What this means and how to solve this problem in my Arkod layer pages there?
+
+(With a screenshot: Settings → Services, "GOO · Google (your key)", red, "offline since 13:33 · Your request
+cannot be served because satellite tiles and 3D tiles are not available for your account and region".)
+
+Read: Settings → Google map was on satellite or hybrid. Google serves the road map and terrain on his key, but
+refuses satellite and 3D to accounts in the EEA (its terms since 2025). Nothing is down.
+
+1. Satellite and hybrid fall back to an aerial photograph (Esri World Imagery) when Google refuses them,
+   hybrid with streets and place names over it; the map says so in one line; the GOO light is not turned
+   red by this refusal (it is Google's rule, not an outage). **Status:** in progress.
