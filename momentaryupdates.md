@@ -285,3 +285,11 @@ refuses satellite and 3D to accounts in the EEA (its terms since 2025). Nothing 
    satellite shows the aerial photograph, hybrid adds streets and place names (web; Android shows the photograph),
    one line on the map says why, the GOO light stays green; Settings → Google map explains it; both help pages.
    64 browser checks (Google answering as it answers this account).
+
+## 1.10.2026, a long press on GOO chooses Google's view
+
+> I need a new feature inside my ArkodLayer app. Long press on the action bar for Google Maps. G O O. It needs to open different options for different views for Google Maps. Just that, and then when I choose the view it just closes. Easy.
+
+1. A long press on the GOO key opens a small choice of Google's views (map, satellite, terrain, hybrid); a tap
+   on one shows it and closes the choice. In both apps (FEATURES row 40) and both help pages.
+   **Status:** in progress.
