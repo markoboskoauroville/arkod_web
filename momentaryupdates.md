@@ -208,10 +208,15 @@ Read: "VMS" is WMS (the ARKOD layer, the state's map service), "VFS" is WFS (par
 feature service), KAT is the cadastre's OSS (posjedovni list and search), ZK the land registry; "ArcCode"
 is ARKOD; "opčina" is the cadastral municipality (k.o.) KUKLJICA, 334723.
 
-1. The private repository markoboskoauroville/ARKOD_cache. **Status:** in progress.
+1. The private repository markoboskoauroville/ARKOD_cache. **Status:** waiting for Marko: this session may not
+   create repositories (GitHub: "sessions are bound to their configured repositories"); he creates it empty,
+   then it is attached here and filled.
 2. Kukljica cached in it whole: WMS tiles, WFS outlines, KAT records and possession sheets, ZK folios.
-   **Status:** in progress.
+   **Status:** sweeping since 1.10.2026 03:50 (scripts/sweep.py: possession sheets, records, folios current and
+   with history, the k.o.'s extent, WMS tiles z14 to z18, WFS outlines), into a local folder until the repository
+   exists.
 3. The "remote cache" access point: both apps read from it when the state does not answer, also on a new
    install. A private repository needs a reader that holds a credential, so the apps read it through the
    web app's server. **Status:** after 1 and 2; the design is put to Marko.
-4. The question about a Pixel emulator and the monkey: answered in the chat. **Status:** in progress.
+4. The question about a Pixel emulator and the monkey: answered in the chat. **Status:** done: not in this
+   container (no /dev/kvm, and the emulator needs it); yes on GitHub Actions, whose Linux runners have KVM.
